@@ -217,11 +217,20 @@ class ApiService {
     return response.data as List<dynamic>;
   }
 
-  Future<Map<String, dynamic>> createVacancyResponse(String vacancyId, String message) async {
-    final data = {'message': message};
-    final response = await apiFetch('/vacancies/$vacancyId/responses', method: 'POST', data: data, requiresAuth: true);
+  Future<Map<String, dynamic>> createVacancyResponse(String vacancyId, String message, {required String userId}) async {
+    final data = {
+      'message': message,
+      'user_id': userId,
+    };
+    final response = await apiFetch(
+      '/vacancies/$vacancyId/responses',
+      method: 'POST',
+      data: data,
+      requiresAuth: true,
+    );
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка отправки отклика');
+      debugPrint('Error response: ${response.data}');
+      throw Exception('Ошибка отправки отклика: ${response.data}');
     }
     return response.data as Map<String, dynamic>;
   }

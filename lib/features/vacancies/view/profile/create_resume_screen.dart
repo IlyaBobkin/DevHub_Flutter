@@ -22,7 +22,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
   String? _selectedExperienceLevel;
   List<Map<String, dynamic>> _specializations = [];
   String? _errorMessage;
-  final List<String> _experienceLevels = ['Junior', 'Middle', 'Senior'];
+  final List<String> _experienceLevels = ['junior', 'middle', 'senior'];
 
   @override
   void initState() {
@@ -35,6 +35,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userId = prefs.getString('user_id');
+      debugPrint('User ID loaded: $_userId');
     });
   }
 
@@ -44,6 +45,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
       if (mounted) {
         setState(() {
           _specializations = specializations;
+          debugPrint('Specializations loaded: $_specializations');
         });
       }
     } catch (e) {
@@ -62,7 +64,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
         final expectedSalary = _expectedSalaryController.text.isNotEmpty
             ? num.parse(_expectedSalaryController.text)
             : null;
-        await _apiService.createResume(
+        final resume = await _apiService.createResume(
           id: resumeId,
           userId: _userId!,
           title: _titleController.text,
@@ -73,7 +75,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
           location: _locationController.text,
         );
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Резюме создано!')));
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Возвращаем true, чтобы сообщить, что резюме создано
       } catch (e) {
         setState(() {
           _errorMessage = 'Ошибка создания резюме: $e';

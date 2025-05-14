@@ -686,6 +686,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
+        alignment: Alignment(0, -0.2),
         children: [
           Container(
             decoration: const BoxDecoration(
@@ -698,13 +699,6 @@ class _LoginScreenState extends State<LoginScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
-                    child: Image.asset("assets/images/loginvector.png"),
-                  ),
-                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Form(

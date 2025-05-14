@@ -60,7 +60,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     // Проверка наличия резюме
     try {
       final resume = await _apiService.getMyResume();
-      if (resume.isEmpty) {
+      if (resume!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Сначала создайте резюме')),
         );

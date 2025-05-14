@@ -199,7 +199,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Регистрация успешна!')),
           );
-          Navigator.of(context).pushReplacementNamed('/vacancies');
+          Navigator.of(context).pushReplacementNamed('/main');
         } else {
           throw Exception('Не удалось получить токены после регистрации.');
         }

@@ -18,6 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final ApiService _apiService = ApiService();
   String? _userName;
   String? _userEmail;
+  String? _userRole;
   Map<String, dynamic>? _resume;
   List<Map<String, dynamic>> _specializations = [];
   bool _isLoading = true;
@@ -37,17 +38,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _errorMessage = null;
     });
     try {
-      // Получаем информацию о пользователе
-      String? _userId = prefs.getString('user_id');
-      if (_userId == null) throw Exception('Пользователь не авторизован');
-      final userInfo = await _apiService.getUserProfileById(_userId);
-      // Проверяем наличие резюме
+      String? userId = prefs.getString('user_id');
+      if (userId == null) throw Exception('Пользователь не авторизован');
+      final userInfo = await _apiService.getUserProfileById(userId);
       final resume = await _apiService.getMyResume();
-      // Загружаем список специализаций
       final specializations = await _apiService.getSpecializations();
       setState(() {
         _userName = userInfo['name'] ?? 'Не указано';
         _userEmail = userInfo['email'] ?? 'Не указано';
+        _userRole = userInfo['role'] == 'applicant'
+            ? 'Соискатель'
+            : userInfo['role'] == 'company_owner'
+            ? 'Работодатель'
+            : 'Не указано';
         _resume = resume;
         _specializations = specializations;
         _isLoading = false;
@@ -57,6 +60,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _errorMessage = 'Ошибка загрузки данных: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _deleteResume() async {
+    if (_resume == null || _resume!['id'] == null) return;
+    try {
+      await _apiService.deleteResume(_resume!['id']);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Резюме удалено!')));
+      await _loadUserData(); // Перезагружаем данные после удаления
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
     }
   }
 
@@ -100,6 +114,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
               child: const Text('Повторить', style: TextStyle(color: Colors.white)),
             ),
+            ElevatedButton(
+              onPressed: _logout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 6,
+              ),
+              child: const Text('Выйти', style: TextStyle(color: Colors.white, fontSize: 16)),
+            ),
           ],
         ),
       )
@@ -108,7 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Карточка профиля
             Card(
               elevation: 6,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -120,7 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Аватар
                     Center(
                       child: CircleAvatar(
                         radius: 50,
@@ -129,31 +151,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Имя
                     Row(
                       children: [
                         Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary, size: 24),
                         const SizedBox(width: 8),
-                        Text(
-                          "Имя: $_userName",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                        Expanded(
+                          child: Text(
+                            "Имя: $_userName",
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // Email
                     Row(
                       children: [
                         const Icon(Icons.email_outlined, color: Colors.grey, size: 24),
                         const SizedBox(width: 8),
-                        Text(
-                          "Почта: $_userEmail",
-                          style: const TextStyle(fontSize: 16, color: Colors.grey),
+                        Expanded(
+                          child: Text(
+                            "Почта: $_userEmail",
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // Дата
+                    Row(
+                      children: [
+                        const Icon(Icons.quick_contacts_mail, color: Colors.grey, size: 24),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Роль: $_userRole",
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(Icons.calendar_month, color: Colors.grey, size: 24),
@@ -180,17 +222,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                    ],
-                    // Уровень опыта (если резюме существует)
-                    if (_resume != null) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           Icon(Icons.star_border, color: Theme.of(context).colorScheme.primary, size: 24),
                           const SizedBox(width: 8),
-                          Text(
-                            "Уровень опыта: ${_resume!['experience_level'] ?? 'Не указано'}",
-                            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                          Expanded(
+                            child: Text(
+                              "Уровень опыта: ${_resume!['experience_level'] ?? 'Не указано'}",
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
                         ],
                       ),
@@ -200,21 +243,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Кнопка для резюме
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_resume != null) {
-                  Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => EditResumeScreen(resume: _resume!),
                     ),
                   );
+                  if (result == true) {
+                    await _loadUserData(); // Перезагружаем данные после редактирования
+                  }
                 } else {
-                  Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const CreateResumeScreen()),
                   );
+                  if (result == true) {
+                    await _loadUserData(); // Перезагружаем данные после создания
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -228,8 +276,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
+            if (_resume != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _deleteResume,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 6,
+                ),
+                child: const Text(
+                  'Удалить резюме',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
-            // Кнопка выхода
             ElevatedButton(
               onPressed: _logout,
               style: ElevatedButton.styleFrom(

@@ -69,7 +69,6 @@ class ApiService {
     }
   }
 
-  // Регистрация
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
@@ -87,8 +86,10 @@ class ApiService {
       if (companyDescription != null) 'companyDescription': companyDescription,
     };
 
+    debugPrint('Register data: $data'); // Логируем данные перед отправкой
     final response = await apiFetch('/user/register', method: 'POST', data: data);
     if (response.statusCode != 200 && response.statusCode != 201) {
+      debugPrint('Register response error: ${response.statusCode} - ${response.data}');
       throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка регистрации');
     }
     return response.data as Map<String, dynamic>;
@@ -331,12 +332,22 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> getMyResume() async {
-    final response = await apiFetch('/resumes/my', method: 'GET', requiresAuth: true);
-    if (response.statusCode != 200) {
-      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка загрузки резюме');
+// Получение резюме пользователя
+  Future<Map<String, dynamic>?> getMyResume() async {
+    try {
+      final response = await apiFetch('/resumes/my', method: 'GET', requiresAuth: true);
+      if (response.statusCode != 200) {
+        throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка загрузки резюме');
+      }
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e.toString().contains('404')) {
+        debugPrint('Резюме не найдено (404), возвращаем null');
+        return null; // Если резюме нет, возвращаем null
+      }
+      debugPrint('Ошибка получения резюме: $e');
+      throw e; // Пробрасываем другие ошибки
     }
-    return response.data as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> updateResume(String resumeId, {

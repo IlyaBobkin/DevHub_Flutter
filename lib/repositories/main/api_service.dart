@@ -467,6 +467,14 @@ class ApiService {
     }
     return response.data as Map<String, dynamic>;
   }
+
+  Future<List<Map<String, dynamic>>> getSpecializations() async {
+    final response = await apiFetch('/specializations', method: 'GET', requiresAuth: true);
+    if (response.statusCode != 200) {
+      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка загрузки специализаций');
+    }
+    return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
 }
 
 Future<void> initializeApp() async {
@@ -572,3 +580,4 @@ Future<Map<String, dynamic>> fetchProfile(String token) async {
     throw Exception('Failed to fetch profile: ${response.statusCode} - ${response.body}');
   }
 }
+

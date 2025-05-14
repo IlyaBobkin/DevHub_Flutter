@@ -83,34 +83,34 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        destinations: const [
+        destinations: [
           NavigationDestination(
             icon: Icon(CupertinoIcons.briefcase, color: Colors.black),
-            selectedIcon: Icon(CupertinoIcons.briefcase_fill, color: Colors.blue),
+            selectedIcon: Icon(CupertinoIcons.briefcase_fill, color: Theme.of(context).colorScheme.primary),
             label: "Вакансии",
             tooltip: "Вакансии",
           ),
           NavigationDestination(
             icon: Icon(CupertinoIcons.mail, color: Colors.black),
-            selectedIcon: Icon(CupertinoIcons.mail_solid, color: Colors.blue),
+            selectedIcon: Icon(CupertinoIcons.mail_solid, color: Theme.of(context).colorScheme.primary),
             label: "Отклики",
             tooltip: "Отклики",
           ),
           NavigationDestination(
             icon: Icon(CupertinoIcons.chat_bubble_2, color: Colors.black),
-            selectedIcon: Icon(CupertinoIcons.chat_bubble_2_fill, color: Colors.blue),
+            selectedIcon: Icon(CupertinoIcons.chat_bubble_2_fill, color: Theme.of(context).colorScheme.primary),
             label: "Чаты",
             tooltip: "Чаты",
           ),
           NavigationDestination(
             icon: Icon(CupertinoIcons.bell, color: Colors.black),
-            selectedIcon: Icon(CupertinoIcons.bell_fill, color: Colors.blue),
+            selectedIcon: Icon(CupertinoIcons.bell_fill, color: Theme.of(context).colorScheme.primary),
             label: "Уведомления",
             tooltip: "Уведомления",
           ),
           NavigationDestination(
             icon: Icon(CupertinoIcons.person_crop_circle, color: Colors.black),
-            selectedIcon: Icon(CupertinoIcons.person_crop_circle_fill, color: Colors.blue),
+            selectedIcon: Icon(CupertinoIcons.person_crop_circle_fill, color: Theme.of(context).colorScheme.primary),
             label: "Профиль",
             tooltip: "Профиль",
           ),

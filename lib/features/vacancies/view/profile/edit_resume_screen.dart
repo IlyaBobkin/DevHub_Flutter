@@ -1,37 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 
-class CreateResumeScreen extends StatefulWidget {
-  const CreateResumeScreen({super.key});
+class EditResumeScreen extends StatefulWidget {
+  final Map<String, dynamic> resume;
+
+  const EditResumeScreen({super.key, required this.resume});
 
   @override
-  State<CreateResumeScreen> createState() => _CreateResumeScreenState();
+  State<EditResumeScreen> createState() => _EditResumeScreenState();
 }
 
-class _CreateResumeScreenState extends State<CreateResumeScreen> {
+class _EditResumeScreenState extends State<EditResumeScreen> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _expectedSalaryController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _locationController;
+  late TextEditingController _expectedSalaryController;
   String? _userId;
   String? _selectedSpecializationId;
   String? _selectedExperienceLevel;
   List<Map<String, dynamic>> _specializations = [];
+  bool _isLoadingSpecializations = true;
   String? _errorMessage;
-  final List<String> _experienceLevels = ['Junior', 'Middle', 'Senior'];
+  final List<String> _experienceLevels = ['junior', 'middle', 'senior'];
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _titleController = TextEditingController(text: widget.resume['title'] ?? '');
+    _descriptionController = TextEditingController(text: widget.resume['description'] ?? '');
+    _locationController = TextEditingController(text: widget.resume['location'] ?? '');
+    _expectedSalaryController = TextEditingController(text: widget.resume['expectedSalary']?.toString() ?? '');
+    _selectedSpecializationId = widget.resume['specializationId'];
+    _selectedExperienceLevel = widget.resume['experienceLevel'];
+    _loadUserId();
     _loadSpecializations();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userId = prefs.getString('user_id');
@@ -44,26 +52,27 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
       if (mounted) {
         setState(() {
           _specializations = specializations;
+          _isLoadingSpecializations = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Ошибка загрузки специализаций: $e';
+          _isLoadingSpecializations = false;
         });
       }
     }
   }
 
-  Future<void> _createResume() async {
+  Future<void> _updateResume() async {
     if (_formKey.currentState!.validate() && _userId != null && _selectedSpecializationId != null && _selectedExperienceLevel != null) {
-      final resumeId = const Uuid().v4();
       try {
         final expectedSalary = _expectedSalaryController.text.isNotEmpty
             ? num.parse(_expectedSalaryController.text)
             : null;
-        await _apiService.createResume(
-          id: resumeId,
+        await _apiService.updateResume(
+          widget.resume['id'],
           userId: _userId!,
           title: _titleController.text,
           description: _descriptionController.text,
@@ -72,11 +81,11 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
           experienceLevel: _selectedExperienceLevel!,
           location: _locationController.text,
         );
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Резюме создано!')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Резюме обновлено!')));
         Navigator.pop(context);
       } catch (e) {
         setState(() {
-          _errorMessage = 'Ошибка создания резюме: $e';
+          _errorMessage = 'Ошибка обновления резюме: $e';
         });
       }
     } else {
@@ -90,9 +99,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Создать резюме', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 4,
+        title: const Text('Редактировать резюме'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -110,13 +117,15 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
                 decoration: const InputDecoration(labelText: 'Описание'),
                 validator: (value) => value?.isEmpty ?? true ? 'Введите описание' : null,
               ),
-              DropdownButtonFormField<String>(
+              _isLoadingSpecializations
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<String>(
                 value: _selectedSpecializationId,
                 decoration: const InputDecoration(labelText: 'Специализация'),
                 items: _specializations.map((spec) {
                   return DropdownMenuItem<String>(
                     value: spec['id'],
-                    child: Text(spec['name'] ?? spec['id']),
+                    child: Text(spec['name']),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -163,13 +172,13 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _createResume,
+                onPressed: _updateResume,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Создать', style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: const Text('Сохранить', style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),

@@ -31,7 +31,9 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
       _errorMessage = null;
     });
     try {
+      debugPrint('Loading responses for responseId: ${widget.responseId}');
       final allResponses = await _apiService.getMyVacancyResponses();
+      debugPrint('All responses: $allResponses');
       final response = allResponses.firstWhere(
             (r) => r['id'].toString() == widget.responseId,
         orElse: () => throw Exception('Отклик с ID ${widget.responseId} не найден'),
@@ -52,7 +54,7 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Отклик ${widget.responseId}'),
+        title: Text('Детали отклика'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -66,23 +68,23 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Отклик ${widget.responseId}',
+              'Отклик на вакансию ${_response!['item_title'] ?? 'Не указана'}',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              'Вакансия: ${_response!['vacancy']?['title'] ?? 'Не указана'}',
+              'Дата создания: ${_response!['created_at'] != null ? DateFormat.yMMMd('ru').format(DateTime.parse(_response!['created_at'])) : 'Не указана'}',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Работодатель: ${_response!['who_name'] ?? 'Не указана'}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 8),
             Text(
               'Статус: ${_response!['status'] ?? 'Не указан'}',
               style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Дата создания: ${_response!['created_at'] != null ? DateFormat.yMMMd('ru').format(DateTime.parse(_response!['created_at'])) : 'Не указана'}',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             Text(

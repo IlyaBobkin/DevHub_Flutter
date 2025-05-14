@@ -57,16 +57,6 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       );
       return;
     }
-    _apiService.createResume(
-      id: "d1a409c4-1372-4363-b00d-0c215f1d59dq",
-      userId: userId,
-      title: 'Моё резюме',
-      description: 'Описание',
-      specializationId: 'f860efc9-622e-4add-acc8-7e916ecb01d8',
-      experienceLevel: 'middle',
-      location: 'г. Санкт-Петербург',
-    );
-
     // Проверка наличия резюме
     try {
       final resume = await _apiService.getMyResume();

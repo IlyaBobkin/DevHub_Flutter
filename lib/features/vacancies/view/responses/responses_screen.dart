@@ -30,7 +30,9 @@ class _ResponsesScreenState extends State<ResponsesScreen> {
       _errorMessage = null;
     });
     try {
+      debugPrint('Loading responses');
       final responses = await _apiService.getMyVacancyResponses();
+      debugPrint('Responses: $responses');
       setState(() {
         _responses = responses;
         _isLoading = false;
@@ -60,7 +62,8 @@ class _ResponsesScreenState extends State<ResponsesScreen> {
         itemCount: _responses.length,
         itemBuilder: (context, index) {
           final response = _responses[index];
-          final vacancyTitle = response['vacancy']?['title'] ?? 'Не указана';
+          final vacancyTitle = response['item_title'] ?? 'Не указана';
+          final status = response['status'] ?? '-';
           final createdAt = response['created_at'] != null
               ? DateFormat.yMMMd('ru').format(DateTime.parse(response['created_at']))
               : 'Не указано';
@@ -68,7 +71,7 @@ class _ResponsesScreenState extends State<ResponsesScreen> {
             child: ListTile(
               leading: const Icon(Icons.mail),
               title: Text('Отклик ${index + 1}'),
-              subtitle: Text('Вакансия: $vacancyTitle\nДата: $createdAt'),
+              subtitle: Text('Вакансия: $vacancyTitle\nСтатус: $status\nДата: $createdAt'),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(

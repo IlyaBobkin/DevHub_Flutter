@@ -27,36 +27,114 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
   }
 
+  Future<String> getAdminToken() async {
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8086/realms/master/protocol/openid-connect/token'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'grant_type': 'password',
+        'client_id': 'admin-cli',
+        'username': 'admin',
+        'password': 'admin',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token'] as String;
+    } else {
+      throw Exception('Не удалось получить токен администратора: ${response.body}');
+    }
+  }
+
+  Future<String> getUserId(String adminToken, String email) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/users?email=$email'),
+      headers: {
+        'Authorization': 'Bearer $adminToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final users = jsonDecode(response.body) as List<dynamic>;
+      if (users.isNotEmpty) {
+        return users[0]['id'] as String;
+      } else {
+        throw Exception('Пользователь с email $email не найден');
+      }
+    } else {
+      throw Exception('Не удалось найти пользователя: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getRoleByName(String adminToken, String roleName) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/roles/$roleName'),
+      headers: {
+        'Authorization': 'Bearer $adminToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Не удалось найти роль $roleName: ${response.body}');
+    }
+  }
+
+  Future<void> assignRoleToUser(String adminToken, String userId, String roleName) async {
+    // Получаем информацию о роли
+    final role = await getRoleByName(adminToken, roleName);
+
+    // Формируем данные для назначения роли
+    final roleMapping = [
+      {
+        'id': role['id'],
+        'name': role['name'],
+      }
+    ];
+
+    // Назначаем роль пользователю
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/users/$userId/role-mappings/realm'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $adminToken',
+      },
+      body: jsonEncode(roleMapping),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 204) {
+      throw Exception('Не удалось назначить роль: ${response.body}');
+    }
+  }
+
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
       try {
-        // Подготовка данных для регистрации
         final role = _roleSelection[0] ? 'applicant' : 'company_owner';
         final data = {
           'name': _nameController.text,
           'email': _emailController.text,
           'password': _passwordController.text,
           'role': role,
-          if (_roleSelection[1])
-            'companyName': _companyNameController.text,
-          if (_roleSelection[1])
-            'companyDescription': _companyDescController.text,
+          if (_roleSelection[1]) 'companyName': _companyNameController.text,
+          if (_roleSelection[1]) 'companyDescription': _companyDescController.text,
         };
 
-        // Отправка запроса на сервер (заглушка, замени на реальный API)
         final response = await http.post(
-          Uri.parse('http://localhost:8080/user/register'), // Замени на свой endpoint
+          Uri.parse('http://10.0.2.2:8080/user/register'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(data),
         );
 
-        if (response.statusCode == 201) { // Предполагаем 201 для успешной регистрации
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Регистрация успешна!')),
-          );
-          Navigator.of(context).pushReplacementNamed('/login');
+        if (response.statusCode == 201) {
+          // Автоматический вход после регистрации
+          await _loginAfterRegistration();
         } else {
           throw Exception('Ошибка регистрации: ${response.body}');
         }
@@ -67,6 +145,93 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       } finally {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loginAfterRegistration() async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'grant_type': 'password',
+          'client_id': 'frontend',
+          'client_secret': 'QMtjD85G7WZ6ZWE5SdIV6MaA3393Qrgp',
+          'username': _emailController.text,
+          'password': _passwordController.text,
+          'scope': 'openid profile email',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final tokenResponse = jsonDecode(response.body);
+        final accessToken = tokenResponse['access_token'] as String?;
+        final refreshToken = tokenResponse['refresh_token'] as String?;
+
+        if (accessToken != null && refreshToken != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', accessToken);
+          await prefs.setString('refresh_token', refreshToken);
+
+          final userInfo = await fetchUserInfo(accessToken);
+          final profile = await fetchProfile(accessToken);
+
+          await prefs.setString('user_id', userInfo['sub']);
+          await prefs.setString('name', userInfo['name'] ?? profile['name'] ?? '');
+          await prefs.setString('email', userInfo['email'] ?? '');
+          final roles = userInfo['realm_access']?['roles'] as List<String>?;
+          String role = '';
+          if (roles != null) {
+            if (roles.contains('company_owner')) {
+              role = 'company_owner';
+            } else if (roles.contains('applicant')) {
+              role = 'applicant';
+            }
+          }
+          await prefs.setString('role', role);
+          await prefs.setString('created_at', profile['created_at'] ?? DateTime.now().toIso8601String());
+          await prefs.setString('companyId', profile['companyId'] ?? '');
+          await prefs.setString('companyName', profile['companyName'] ?? '');
+          await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Регистрация успешна!')),
+          );
+          Navigator.of(context).pushReplacementNamed('/vacancies');
+        } else {
+          throw Exception('Не удалось получить токены после регистрации.');
+        }
+      } else {
+        throw Exception('Ошибка входа после регистрации: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Ошибка входа после регистрации: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchUserInfo(String token) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to fetch user info: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchProfile(String token) async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8080/user/profile'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to fetch profile: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -173,7 +338,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Пожалуйста, введите почту';
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value ?? '')) {
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                         return 'Введите корректный адрес почты';
                       }
                       return null;

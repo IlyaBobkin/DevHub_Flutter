@@ -574,12 +574,13 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}*/
-import 'dart:convert';
+}*/import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../repositories/main/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -608,69 +609,40 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        // Отправляем запрос на получение токенов через ROPC
-        final response = await http.post(
-          Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: {
-            'grant_type': 'password',
-            'client_id': 'frontend',
-            'client_secret': 'QMtjD85G7WZ6ZWE5SdIV6MaA3393Qrgp',
-            'username': _emailController.text,
-            'password': _passwordController.text,
-            'scope': 'openid profile email',
-          },
+        final result = await ApiService().login(
+          email: _emailController.text,
+          password: _passwordController.text,
+          role: _roleSelection[0] ? 'applicant' : 'company_owner',
         );
 
-        if (response.statusCode == 200) {
-          final tokenResponse = jsonDecode(response.body);
-          final accessToken = tokenResponse['access_token'] as String?;
-          final refreshToken = tokenResponse['refresh_token'] as String?;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', result['access_token']);
+        await prefs.setString('refresh_token', result['refresh_token']);
 
-          if (accessToken != null && refreshToken != null) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('access_token', accessToken);
-            await prefs.setString('refresh_token', refreshToken);
+        // Загрузка данных пользователя
+        final userInfo = await fetchUserInfo(result['access_token']);
+        final profile = await fetchProfile(result['access_token']);
 
-            // Загрузка данных пользователя
-            final userInfo = await fetchUserInfo(accessToken);
-            final profile = await fetchProfile(accessToken);
-
-            await prefs.setString('user_id', userInfo['sub']);
-            await prefs.setString('name', userInfo['name'] ?? profile['name'] ?? '');
-            await prefs.setString('email', userInfo['email'] ?? '');
-            final roles = userInfo['realm_access']?['roles'] as List<String>?;
-            String role = '';
-            if (roles != null) {
-              if (roles.contains('company_owner')) {
-                role = 'company_owner';
-              } else if (roles.contains('applicant')) {
-                role = 'applicant';
-              }
-            }
-            await prefs.setString('role', role);
-            await prefs.setString('created_at', profile['created_at'] ?? DateTime.now().toIso8601String());
-            await prefs.setString('companyId', profile['companyId'] ?? '');
-            await prefs.setString('companyName', profile['companyName'] ?? '');
-            await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Авторизация успешна!')),
-            );
-            Navigator.of(context).pushReplacementNamed('/vacancies');
-          } else {
-            throw Exception('Не удалось получить токены.');
-          }
-        } else {
-          throw Exception('Ошибка авторизации: ${response.statusCode} - ${response.body}');
+        await prefs.setString('user_id', userInfo['sub']);
+        await prefs.setString('name', userInfo['name'] ?? profile['name'] ?? '');
+        await prefs.setString('email', userInfo['email'] ?? '');
+        final roles = userInfo['realm_access']?['roles'] as List<String>?;
+        String role = profile['role'];
+        final selectedRole = _roleSelection[0] ? 'applicant' : 'company_owner';
+        if (role != selectedRole) {
+          throw Exception('Выбранная роль не соответствует вашей роли. Пожалуйста, выберите правильную роль.');
         }
+        await prefs.setString('role', role);
+        await prefs.setString('created_at', profile['created_at'] ?? DateTime.now().toIso8601String());
+        await prefs.setString('companyId', profile['companyId'] ?? '');
+        await prefs.setString('companyName', profile['companyName'] ?? '');
+        await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
+
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Авторизация прошла успешно!')));
+        Navigator.of(context).pushReplacementNamed('/vacancies');
       } catch (e) {
         print('Login error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка авторизации: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка авторизации: $e')));
       } finally {
         setState(() => _isLoading = false);
       }

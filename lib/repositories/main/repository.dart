@@ -1,11 +1,16 @@
-import 'dart:ffi';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:my_new_project/repositories/main/model/vacancy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Repository{
-  Future<void> getVacancies() async{
-    final response = await Dio().get("http://localhost:8080/vacancies/all");
-    debugPrint("response: " + response.toString());
+import 'api_service.dart';
+
+class Repository {
+  final Dio _dio = Dio();
+
+  Future<List<Vacancy>> getVacancies() async {
+    final api = ApiService();
+    final response = await api.getAllVacancies();
+    return (response).map((json) => Vacancy.fromJson(json)).toList();
   }
 }

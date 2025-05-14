@@ -1,7 +1,6 @@
-// Экран "Вакансии" в стиле изображения
 import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/vacancies_detail_screen.dart';
-
+import '../../../../repositories/main/model/vacancy.dart';
 import '../../../../repositories/main/repository.dart';
 
 class VacanciesScreen extends StatefulWidget {
@@ -14,52 +13,55 @@ class VacanciesScreen extends StatefulWidget {
 class _VacanciesScreenState extends State<VacanciesScreen> {
   String _searchQuery = '';
   String _selectedFilter = 'Frontend';
+  List<Vacancy> _vacanciesList = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
-    Repository().getVacancies();
     super.initState();
+    _loadVacancies();
   }
 
-  final List<Map<String, dynamic>> _vacancies = [
-    {
-      'title': 'UI/UX Designer',
-      'company': 'Badoo Inc.',
-      'location': 'г. Санкт-Петербург',
-      'zp': '30.000 - 45.000 ₽',
-      'type': ['Full-time', 'Intern'],
-      'timeAgo': '2 hours ago',
-      'isSponsored': true,
-    },
-    {
-      'title': 'Sr. UI/UX Designer',
-      'company': 'Meta Inc.',
-      'location': 'г. Москва',
-      'zp': '30.000 - 45.000 ₽',
-      'type': ['Full-time', 'Remote'],
-      'timeAgo': '5 hours ago',
-      'isSponsored': true,
-    },
-    {
-      'title': 'Sr. UI Developer',
-      'company': 'Netflix Inc.',
-      'location': 'г. Санкт-Петербург',
-      'zp': '30.000 - 45.000 ₽',
-      'type': ['Full-time', 'Shift'],
-      'timeAgo': '30 min ago',
-      'isSponsored': true,
-    },
-  ];
+  Future<void> _loadVacancies() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final vacancies = await Repository().getVacancies();
+      setState(() {
+        _vacanciesList = vacancies;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Фильтрация вакансий по поиску и выбранному фильтру
+  List<Vacancy> get _filteredVacancies {
+    return _vacanciesList.where((vacancy) {
+      final matchesSearch = vacancy.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          vacancy.specializationName.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesFilter = _selectedFilter.isEmpty ||
+          vacancy.specializationName.toLowerCase().contains(_selectedFilter.toLowerCase());
+      return matchesSearch && matchesFilter;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Row(
+        title: const Row(
           children: [
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'DevHub',
               style: TextStyle(color: Colors.black),
             ),
@@ -86,7 +88,24 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                 hintText: 'Поиск вакансий',
                 hintStyle: const TextStyle(color: Colors.grey),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                suffixIcon: const Icon(Icons.tune, color: Colors.grey),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.tune, color: Colors.grey),
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: VacancySearchDelegate(
+                        vacancies: _vacanciesList,
+                        onSelect: (vacancyId) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => VacancyDetailScreen(vacancyId: vacancyId),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -102,18 +121,22 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildFilterChip('Frontend', _selectedFilter == 'Frontend'),
-                _buildFilterChip('Java', _selectedFilter == 'Java'),
+                _buildFilterChip('Backend', _selectedFilter == 'Backend'), // Обновлено под данные
                 _buildFilterChip('UI/UX', _selectedFilter == 'UI/UX'),
                 _buildFilterChip('Flutter', _selectedFilter == 'Flutter'),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                ? Center(child: Text(_errorMessage!))
+                : ListView.builder(
               padding: const EdgeInsets.all(8.0),
-              itemCount: _vacancies.length,
+              itemCount: _filteredVacancies.length,
               itemBuilder: (context, index) {
-                final vacancy = _vacancies[index];
+                final vacancy = _filteredVacancies[index];
                 return Card(
                   color: Colors.white,
                   shape: RoundedRectangleBorder(
@@ -124,7 +147,7 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(15.0),
                     title: Text(
-                      vacancy['title']!,
+                      vacancy.title,
                       style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
@@ -134,17 +157,17 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                       spacing: 5,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 2,),
+                        const SizedBox(height: 2),
                         Text(
-                          vacancy['zp']! + " в месяц",
+                          '${vacancy.salaryFrom.toStringAsFixed(2)} - ${vacancy.salaryTo.toStringAsFixed(2)} ₽ в месяц',
                           style: const TextStyle(color: Colors.blue, fontSize: 15),
                         ),
                         Text(
-                          vacancy['company']!,
+                          vacancy.companyName,
                           style: const TextStyle(color: Colors.grey),
                         ),
                         Text(
-                          vacancy['location']!,
+                          vacancy.location,
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -155,7 +178,7 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => VacancyDetailScreen(vacancyId: index + 1),
+                          builder: (context) => VacancyDetailScreen(vacancyId: vacancy.id),
                         ),
                       );
                     },
@@ -169,6 +192,7 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
       ),
     );
   }
+
   Widget _buildFilterChip(String label, bool isSelected) {
     return GestureDetector(
       onTap: () {
@@ -184,17 +208,22 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
-        //backgroundColor: isSelected ? Colors.blue : Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
           side: BorderSide(color: isSelected ? Colors.blue : Colors.grey, width: 2),
         ),
       ),
     );
-  }}
+  }
+}
 
 // Поиск вакансий
 class VacancySearchDelegate extends SearchDelegate<String> {
+  final List<Vacancy> vacancies;
+  final Function(String) onSelect;
+
+  VacancySearchDelegate({required this.vacancies, required this.onSelect});
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -219,17 +248,21 @@ class VacancySearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
+    final results = vacancies.where((vacancy) {
+      return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
+          vacancy.specializationName.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
     return ListView.builder(
-      itemCount: 5,
+      itemCount: results.length,
       itemBuilder: (context, index) {
+        final vacancy = results[index];
         return ListTile(
-          title: Text('Результат поиска ${index + 1} для "$query"'),
+          title: Text(vacancy.title),
+          subtitle: Text(vacancy.specializationName),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => VacancyDetailScreen(vacancyId: index + 1),
-              ),
-            );
+            onSelect(vacancy.id);
+            close(context, vacancy.id);
           },
         );
       },
@@ -238,13 +271,20 @@ class VacancySearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    final suggestions = vacancies.where((vacancy) {
+      return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
+          vacancy.specializationName.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
     return ListView.builder(
-      itemCount: 3,
+      itemCount: suggestions.length,
       itemBuilder: (context, index) {
+        final vacancy = suggestions[index];
         return ListTile(
-          title: Text('Подсказка ${index + 1}'),
+          title: Text(vacancy.title),
+          subtitle: Text(vacancy.specializationName),
           onTap: () {
-            query = 'Подсказка ${index + 1}';
+            query = vacancy.title;
             showResults(context);
           },
         );
@@ -252,4 +292,3 @@ class VacancySearchDelegate extends SearchDelegate<String> {
     );
   }
 }
-

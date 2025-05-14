@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/profile/profile_screen.dart';
 import 'package:my_new_project/features/vacancies/view/responses/responses_screen.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/vacancies_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../authorization/view/login_screen.dart';
 import 'chats/chats_screen.dart';
 import 'notifications/notifications_screen.dart';
 
@@ -25,6 +27,7 @@ class _MainScreenState extends State<MainScreen> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
+
 
   @override
   Widget build(BuildContext context) {

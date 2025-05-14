@@ -9,9 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 class JobApp extends StatelessWidget {
-  const JobApp({super.key});
+  final String initialRoute;
+  const JobApp({super.key, required this.initialRoute});
+
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'DevHub',
       theme: ThemeData(
@@ -19,6 +22,7 @@ class JobApp extends StatelessWidget {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         useMaterial3: true,
       ),
+      initialRoute: initialRoute,
       routes: routes,
     );
   }

@@ -639,7 +639,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
 
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Авторизация прошла успешно!')));
-        Navigator.of(context).pushReplacementNamed('/vacancies');
+        Navigator.of(context).pushReplacementNamed('/main');
       } catch (e) {
         print('Login error: $e');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка авторизации: $e')));

@@ -45,7 +45,7 @@ class _HelloScreenState extends State<HelloScreen> {
               children: [
                 const SizedBox(height: 20),
                 const Text(
-                  'Хотел попасть\nв сферу IT?',
+                  'Хочешь попасть\nв сферу IT?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 32, // Увеличен для акцента

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:my_new_project/repositories/main/model/vacancy.dart';
 
-import 'edit_vacancy_screen.dart';
+import 'actions/edit_vacancy_screen.dart';
 
 class CompanyVacancyDetailScreen extends StatefulWidget {
   final String vacancyId;

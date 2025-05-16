@@ -26,18 +26,28 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
   String? _selectedExperienceLevel;
   List<Map<String, dynamic>> _specializations = [];
   String? _errorMessage;
-  final List<String> _experienceLevels = ['Junior', 'Middle', 'Senior'];
+  final List<String> _experienceLevels = ['junior', 'middle', 'senior'];
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.vacancy.title);
-    _descriptionController = TextEditingController(text: widget.vacancy.description);
-    _salaryFromController = TextEditingController(text: widget.vacancy.salaryFrom.toString());
-    _salaryToController = TextEditingController(text: widget.vacancy.salaryTo?.toString() ?? '');
-    _locationController = TextEditingController(text: widget.vacancy.location);
-    _selectedSpecializationId = widget.vacancy.specializationName;
-    _selectedExperienceLevel = widget.vacancy.experienceLevel;
+    _descriptionController = TextEditingController(text: widget.vacancy.description ?? '');
+    _salaryFromController = TextEditingController(text: widget.vacancy.salaryFrom ?? '');
+    _salaryToController = TextEditingController(text: widget.vacancy.salaryTo ?? '');
+    _locationController = TextEditingController(text: widget.vacancy.location ?? '');
+
+    // Приводим experienceLevel к правильному регистру
+    String experienceLevel = widget.vacancy.experienceLevel;
+    debugPrint('Experience Level from Vacancy: $experienceLevel');
+    _selectedExperienceLevel = _experienceLevels.firstWhere(
+          (level) => level.toLowerCase() == experienceLevel.toLowerCase(),
+      orElse: () {
+        debugPrint('Experience Level not found in list, defaulting to Junior');
+        return 'Junior'; // Значение по умолчанию, если не найдено
+      },
+    );
+
     _loadUserData();
     _loadSpecializations();
   }
@@ -56,6 +66,20 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
       if (mounted) {
         setState(() {
           _specializations = specializations;
+          debugPrint('Loaded specializations: $_specializations');
+          // Сопоставляем specializationName с id
+          if (_specializations.isNotEmpty) {
+            final matchingSpec = _specializations.firstWhere(
+                  (spec) => spec['name'] == widget.vacancy.specializationName,
+              orElse: () {
+                debugPrint('Specialization not found, defaulting to first specialization');
+                return _specializations[0];
+              },
+            );
+            _selectedSpecializationId = matchingSpec['id'];
+          } else {
+            debugPrint('No specializations loaded');
+          }
         });
       }
     } catch (e) {
@@ -70,19 +94,22 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
   Future<void> _updateVacancy() async {
     if (_formKey.currentState!.validate() && _userId != null && _companyId != null && _selectedSpecializationId != null && _selectedExperienceLevel != null) {
       try {
-        final salaryFrom = num.parse(_salaryFromController.text);
+        final salaryFrom = _salaryFromController.text.isNotEmpty ? num.parse(_salaryFromController.text) : null;
         final salaryTo = _salaryToController.text.isNotEmpty ? num.parse(_salaryToController.text) : null;
+        final description = _descriptionController.text.isNotEmpty ? _descriptionController.text : null;
+        final location = _locationController.text.isNotEmpty ? _locationController.text : null;
+
         await _apiService.updateVacancy(
           widget.vacancy.id,
           userId: _userId!,
           companyId: _companyId!,
           title: _titleController.text,
-          description: _descriptionController.text,
-          salaryFrom: salaryFrom,
+          description: description ?? '',
+          salaryFrom: salaryFrom ?? 0,
           salaryTo: salaryTo,
           specializationId: _selectedSpecializationId!,
           experienceLevel: _selectedExperienceLevel!,
-          location: _locationController.text,
+          location: location ?? 'Не указано',
         );
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Вакансия обновлена!')));
         Navigator.pop(context, true);
@@ -102,9 +129,7 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Редактировать вакансию', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 4,
+        title: const Text('Редактировать вакансию'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -119,15 +144,15 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
               ),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Описание'),
-                validator: (value) => value?.isEmpty ?? true ? 'Введите описание' : null,
+                decoration: const InputDecoration(labelText: 'Описание (необязательно)'),
+                validator: (value) => null, // Необязательное поле
               ),
               TextFormField(
                 controller: _salaryFromController,
-                decoration: const InputDecoration(labelText: 'Зарплата от'),
+                decoration: const InputDecoration(labelText: 'Зарплата от (необязательно)'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Введите минимальную зарплату';
+                  if (value == null || value.isEmpty) return null;
                   try {
                     num.parse(value);
                     return null;
@@ -184,14 +209,14 @@ class _EditVacancyScreenState extends State<EditVacancyScreen> {
               ),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Местоположение'),
-                validator: (value) => value?.isEmpty ?? true ? 'Введите местоположение' : null,
+                decoration: const InputDecoration(labelText: 'Местоположение (необязательно)'),
+                validator: (value) => null, // Необязательное поле
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _updateVacancy,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).primaryColor,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

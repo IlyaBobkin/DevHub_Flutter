@@ -5,6 +5,7 @@ import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:my_new_project/repositories/main/model/vacancy.dart';
 import '../../../../authorization/view/login_screen.dart';
 import 'company_vacancies_detail_screen.dart';
+import 'actions/create_vacancy_screen.dart';
 
 class CompanyVacanciesScreen extends StatefulWidget {
   const CompanyVacanciesScreen({super.key});
@@ -73,128 +74,150 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: const Row(
-          children: [
-            SizedBox(width: 8),
-            Text(
-              'Мои вакансии',
-              style: TextStyle(color: Colors.black),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, true);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: const Row(
+            children: [
+              SizedBox(width: 8),
+              Text(
+                'Мои вакансии',
+                style: TextStyle(color: Colors.black),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black),
+              onPressed: () {},
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Поиск моих вакансий',
-                hintStyle: const TextStyle(color: Colors.grey),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Поиск моих вакансий',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                ? Center(child: Text(_errorMessage!))
-                : _filteredVacancies.isEmpty
-                ? const Center(child: Text('Нет созданных вакансий'))
-                : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _filteredVacancies.length,
-              itemBuilder: (context, index) {
-                final vacancy = _filteredVacancies[index];
-                return Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(15.0),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                    DateFormat.yMMMd('ru').format(vacancy.createdAt),
-                          style: const TextStyle(
-                            color: Colors.grey, fontSize: 14
-                          ),
-                        ),
-                        Text(
-                          vacancy.title,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                  ? Center(child: Text(_errorMessage!))
+                  : _filteredVacancies.isEmpty
+                  ? const Center(child: Text('Нет созданных вакансий'))
+                  : ListView.builder(
+                padding: const EdgeInsets.all(8.0),
+                itemCount: _filteredVacancies.length,
+                itemBuilder: (context, index) {
+                  final vacancy = _filteredVacancies[index];
+                  return Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 5),
-                        Text(
-                          // Проверяем salaryFrom и salaryTo на null
-                          '${vacancy.salaryFrom ?? 'Зарплата не указана'} ${vacancy.salaryTo != null ? '- ${vacancy.salaryTo!}' : ''} ₽ в месяц',
-                          style: const TextStyle(color: Colors.blue, fontSize: 15),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child:                         Text(
-                                vacancy.location ?? 'Местоположение не указано',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(15.0),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat.yMMMd('ru').format(vacancy.createdAt),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Text(
+                            vacancy.title,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          Text(
+                            '${vacancy.salaryFrom ?? 'Зарплата не указана'} ${vacancy.salaryTo != null ? '- ${vacancy.salaryTo}' : ''} ₽ в месяц',
+                            style: const TextStyle(color: Colors.blue, fontSize: 15),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: Text(
+                                  vacancy.location ?? 'Местоположение не указано',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
+                      isThreeLine: true,
+                      subtitleTextStyle: const TextStyle(color: Colors.grey),
+                      onTap: () async {
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CompanyVacancyDetailScreen(vacancyId: vacancy.id),
+                          ),
+                        );
+                        if (result == true) {
+                          await _loadVacancies();
+                        }
+                      },
+                      horizontalTitleGap: 16.0,
                     ),
-                    trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
-                    isThreeLine: true,
-                    subtitleTextStyle: const TextStyle(color: Colors.grey),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => CompanyVacancyDetailScreen(vacancyId: vacancy.id),
-                        ),
-                      );
-                    },
-                    horizontalTitleGap: 16.0,
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CreateVacancyScreen()),
+            );
+            if (result == true) {
+              await _loadVacancies();
+            }
+          },
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_detail_screen.dart';
-
 import '../../../../../repositories/main/model/vacancy.dart';
 import '../../../../../repositories/main/repository.dart';
 
@@ -13,7 +13,7 @@ class ApplicantVacanciesScreen extends StatefulWidget {
 
 class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
   String _searchQuery = '';
-  String _selectedFilter = 'Frontend';
+  String _selectedFilter = ''; // Изменили начальное значение на пустую строку
   List<Vacancy> _vacanciesList = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -43,13 +43,13 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
     }
   }
 
-  // Фильтрация вакансий по поиску и выбранному фильтру
+  // Обновлённая фильтрация: отображать все вакансии, если фильтр не выбран
   List<Vacancy> get _filteredVacancies {
     return _vacanciesList.where((vacancy) {
       final matchesSearch = vacancy.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          vacancy.specializationName!.toLowerCase().contains(_searchQuery.toLowerCase());
+          (vacancy.specializationName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
       final matchesFilter = _selectedFilter.isEmpty ||
-          vacancy.specializationName!.toLowerCase().contains(_selectedFilter.toLowerCase());
+          (vacancy.specializationName?.toLowerCase().contains(_selectedFilter.toLowerCase()) ?? false);
       return matchesSearch && matchesFilter;
     }).toList();
   }
@@ -122,7 +122,7 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildFilterChip('Frontend', _selectedFilter == 'Frontend'),
-                _buildFilterChip('Backend', _selectedFilter == 'Backend'), // Обновлено под данные
+                _buildFilterChip('Backend', _selectedFilter == 'Backend'),
                 _buildFilterChip('UI/UX', _selectedFilter == 'UI/UX'),
                 _buildFilterChip('Flutter', _selectedFilter == 'Flutter'),
               ],
@@ -133,6 +133,8 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _errorMessage != null
                 ? Center(child: Text(_errorMessage!))
+                : _filteredVacancies.isEmpty
+                ? const Center(child: Text('Нет доступных вакансий'))
                 : ListView.builder(
               padding: const EdgeInsets.all(8.0),
               itemCount: _filteredVacancies.length,
@@ -155,24 +157,33 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                       ),
                     ),
                     subtitle: Column(
-                      spacing: 5,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 2),
                         Text(
-                          '${vacancy.salaryFrom} - ${vacancy.salaryTo} ₽ в месяц',
-                          style: const TextStyle(color: Colors.blue, fontSize: 15),
+                          '${vacancy.salaryFrom ?? 'Не указано'} - ${vacancy.salaryTo ?? 'Не указано'} ₽ в месяц',
+                          style: const TextStyle(color: Colors.blue, fontSize: 16),
                         ),
-                        Text(
-                          vacancy.companyName ?? 'Не указано',
-                          style: const TextStyle(color: Colors.grey),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Icon(CupertinoIcons.briefcase, color: Theme.of(context).colorScheme.primary, size: 18),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child:                         Text(
+                                vacancy.companyName ?? 'Не указано',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 5),
                         Row(
                           children: [
                             Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
-                            const SizedBox(width: 3),
+                            const SizedBox(width: 5),
                             Expanded(
-                              child:                         Text(
+                              child: Text(
                                 vacancy.location ?? 'Местоположение не указано',
                                 style: const TextStyle(color: Colors.grey),
                               ),
@@ -206,7 +217,7 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedFilter = label;
+          _selectedFilter = isSelected ? '' : label; // Сбрасываем фильтр, если тот же чип нажат повторно
         });
       },
       child: Chip(
@@ -259,7 +270,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
   Widget buildResults(BuildContext context) {
     final results = vacancies.where((vacancy) {
       return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
-          vacancy.specializationName!.toLowerCase().contains(query.toLowerCase());
+          (vacancy.specializationName?.toLowerCase().contains(query.toLowerCase()) ?? false);
     }).toList();
 
     return ListView.builder(
@@ -282,7 +293,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
   Widget buildSuggestions(BuildContext context) {
     final suggestions = vacancies.where((vacancy) {
       return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
-          vacancy.specializationName!.toLowerCase().contains(query.toLowerCase());
+          (vacancy.specializationName?.toLowerCase().contains(query.toLowerCase()) ?? false);
     }).toList();
 
     return ListView.builder(

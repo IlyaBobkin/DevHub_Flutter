@@ -5,16 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:my_new_project/repositories/main/model/vacancy.dart';
 
-class ApplicantVacancyDetailScreen extends StatefulWidget {
+class ResumeDetailScreen extends StatefulWidget {
   final String vacancyId;
 
-  const ApplicantVacancyDetailScreen({super.key, required this.vacancyId});
+  const ResumeDetailScreen({super.key, required this.vacancyId});
 
   @override
-  State<ApplicantVacancyDetailScreen> createState() => _ApplicantVacancyDetailScreenState();
+  State<ResumeDetailScreen> createState() => _ResumeDetailScreenState();
 }
 
-class _ApplicantVacancyDetailScreenState extends State<ApplicantVacancyDetailScreen> {
+class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
   final ApiService _apiService = ApiService();
   Vacancy? _vacancy;
   bool _isLoading = true;

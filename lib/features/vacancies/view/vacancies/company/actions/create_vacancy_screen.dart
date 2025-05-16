@@ -93,9 +93,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Создать вакансию', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        elevation: 4,
+        title: const Text('Создать вакансию'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

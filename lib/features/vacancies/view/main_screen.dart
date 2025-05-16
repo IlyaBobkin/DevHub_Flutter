@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/profile/profile_screen.dart';
-import 'package:my_new_project/features/vacancies/view/responses/responses_screen.dart';
+import 'package:my_new_project/features/vacancies/view/responses/applicant/responses_screen.dart';
+import 'package:my_new_project/features/vacancies/view/responses/company/company_responses_screen.dart';
 import 'package:my_new_project/features/vacancies/view/resumes/resumes_screen.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,7 +108,9 @@ class _MainScreenState extends State<MainScreen> {
               key: _navigatorKeys[1],
               onGenerateRoute: (settings) {
                 return MaterialPageRoute(
-                  builder: (context) => const ResponsesScreen(),
+                  builder: (context) => (_userRole == 'applicant')
+                      ? const ResponsesScreen()
+                      : const CompanyResponsesScreen(),
                 );
               },
             ),

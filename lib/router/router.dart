@@ -4,7 +4,7 @@ import '../features/vacancies/view/chats/chats_screen.dart';
 import '../features/vacancies/view/notifications/notifications_screen.dart';
 import '../features/vacancies/view/profile/applicant/actions/create_resume_screen.dart';
 import '../features/vacancies/view/profile/profile_screen.dart';
-import '../features/vacancies/view/responses/responses_screen.dart';
+import '../features/vacancies/view/responses/applicant/responses_screen.dart';
 import '../features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
 import '../features/vacancies/view/view.dart';
 

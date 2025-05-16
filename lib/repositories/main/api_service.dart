@@ -224,19 +224,12 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<List<dynamic>> getMyVacancies() async {
+  Future<List<Map<String, dynamic>>> getMyVacancies() async {
     final response = await apiFetch('/vacancies/my', method: 'GET', requiresAuth: true);
     if (response.statusCode != 200) {
-      debugPrint('Response status: ${response.statusCode}, data: ${response.data}');
-      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка при получении вакансий');
+      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка загрузки вакансий');
     }
-    // Проверяем, что response.data не null, и возвращаем пустой список при необходимости
-    final data = response.data;
-    if (data == null) {
-      debugPrint('Received null data for /vacancies/my, returning empty list');
-      return [];
-    }
-    return data as List<dynamic>;
+    return List<Map<String, dynamic>>.from(response.data);
   }
 
   Future<Map<String, dynamic>> updateVacancy(String vacancyId, {
@@ -350,8 +343,20 @@ class ApiService {
     return response.data as List<dynamic>;
   }
 
-  Future<Map<String, dynamic>> createVacancyInvitation(String vacancyId, String applicantId, String message) async {
-    final data = {'applicantId': applicantId, 'message': message};
+  Future<Map<String, dynamic>> createVacancyInvitation(
+      String id,
+      String vacancyId,
+      String companyOwnerId,
+      String applicantId,
+      String message,
+      ) async {
+    final data = {
+      'id': id,
+      'vacancyId': vacancyId,
+      'companyOwnerId': companyOwnerId,
+      'applicantId': applicantId,
+      'message': message,
+    };
     final response = await apiFetch('/vacancies/$vacancyId/invitations', method: 'POST', data: data, requiresAuth: true);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка создания приглашения');

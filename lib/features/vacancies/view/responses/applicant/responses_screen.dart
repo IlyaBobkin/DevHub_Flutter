@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Для форматирования даты
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:my_new_project/features/vacancies/view/responses/response_detail_screen.dart';
+import 'package:my_new_project/features/vacancies/view/responses/applicant/response_detail_screen.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 
 class ResponsesScreen extends StatefulWidget {

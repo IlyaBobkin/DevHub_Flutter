@@ -85,6 +85,7 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Детали резюме'),
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -113,7 +114,7 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
                 const SizedBox(height: 8),
                 Text(
                   "Соискатель: ${_resume!.applicantName ?? 'Не указан'}",
-                  style: const TextStyle(fontSize: 20, color: Colors.blue),
+                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 8),
                 Text(

@@ -102,6 +102,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    if (_isDarkTheme)
+      {
+        _toggleTheme();
+      }
     Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => LoginScreen()),
           (Route<dynamic> route) => false,
@@ -188,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: Text(
                               "Имя: $_userName",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),

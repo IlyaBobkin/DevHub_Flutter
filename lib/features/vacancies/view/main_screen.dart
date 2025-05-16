@@ -143,31 +143,31 @@ class _MainScreenState extends State<MainScreen> {
         bottomNavigationBar: NavigationBar(
           destinations: [
             NavigationDestination(
-              icon: Icon((_userRole == 'applicant') ? CupertinoIcons.briefcase: CupertinoIcons.doc_text, color: Colors.black),
+              icon: Icon((_userRole == 'applicant') ? CupertinoIcons.briefcase: CupertinoIcons.doc_text),
               selectedIcon: Icon((_userRole == 'applicant') ? CupertinoIcons.briefcase_fill: CupertinoIcons.doc_text_fill, color: Theme.of(context).colorScheme.primary),
               label: (_userRole == 'applicant') ? "Вакансии" : "Резюме",
               tooltip: (_userRole == 'applicant') ? "Вакансии" : "Резюме",
             ),
             NavigationDestination(
-              icon: Icon(CupertinoIcons.mail, color: Colors.black),
+              icon: Icon(CupertinoIcons.mail),
               selectedIcon: Icon(CupertinoIcons.mail_solid, color: Theme.of(context).colorScheme.primary),
               label: "Отклики",
               tooltip: "Отклики",
             ),
             NavigationDestination(
-              icon: Icon(CupertinoIcons.chat_bubble_2, color: Colors.black),
+              icon: Icon(CupertinoIcons.chat_bubble_2),
               selectedIcon: Icon(CupertinoIcons.chat_bubble_2_fill, color: Theme.of(context).colorScheme.primary),
               label: "Чаты",
               tooltip: "Чаты",
             ),
             NavigationDestination(
-              icon: Icon(CupertinoIcons.bell, color: Colors.black),
+              icon: Icon(CupertinoIcons.bell),
               selectedIcon: Icon(CupertinoIcons.bell_fill, color: Theme.of(context).colorScheme.primary),
               label: "Уведомления",
               tooltip: "Уведомления",
             ),
             NavigationDestination(
-              icon: Icon(CupertinoIcons.person_crop_circle, color: Colors.black),
+              icon: Icon(CupertinoIcons.person_crop_circle),
               selectedIcon: Icon(CupertinoIcons.person_crop_circle_fill, color: Theme.of(context).colorScheme.primary),
               label: "Профиль",
               tooltip: "Профиль",
@@ -180,14 +180,13 @@ class _MainScreenState extends State<MainScreen> {
           },
           selectedIndex: currentPageIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          backgroundColor: Colors.white,
-          indicatorColor: Colors.white,
+          indicatorColor: Colors.transparent,
           labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((Set<WidgetState> states) {
             final isSelected = states.contains(MaterialState.selected);
             return TextStyle(
               fontSize: 11,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected ? Theme.of(context).primaryColor : Colors.black54,
+              color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
             );
           }),
         ),

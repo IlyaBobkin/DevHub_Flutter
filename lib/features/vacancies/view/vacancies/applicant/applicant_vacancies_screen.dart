@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_detail_screen.dart';
 import '../../../../../repositories/main/model/vacancy.dart';
 import '../../../../../repositories/main/repository.dart';
@@ -58,19 +59,19 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Row(
           children: [
             SizedBox(width: 8),
             Text(
               'DevHub',
-              style: TextStyle(color: Colors.black),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
+            icon: const Icon(Icons.menu),
             onPressed: () {},
           ),
         ],
@@ -108,7 +109,6 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                   },
                 ),
                 filled: true,
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -141,7 +141,6 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
               itemBuilder: (context, index) {
                 final vacancy = _filteredVacancies[index];
                 return Card(
-                  color: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -149,20 +148,31 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                   margin: const EdgeInsets.symmetric(vertical: 8.0),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(15.0),
-                    title: Text(
-                      vacancy.title,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          DateFormat.yMMMd('ru').format(vacancy.createdAt),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          vacancy.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 5),
                         Text(
                           '${vacancy.salaryFrom ?? 'Не указано'} - ${vacancy.salaryTo ?? 'Не указано'} ₽ в месяц',
-                          style: const TextStyle(color: Colors.blue, fontSize: 16),
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
                         ),
                         const SizedBox(height: 5),
                         Row(

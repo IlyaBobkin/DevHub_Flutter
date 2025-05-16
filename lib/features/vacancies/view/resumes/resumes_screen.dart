@@ -84,13 +84,12 @@ class _ResumesScreenState extends State<ResumesScreen> {
               SizedBox(width: 8),
               Text(
                 'Все резюме',
-                style: TextStyle(color: Colors.black),
               ),
             ],
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
+              icon: const Icon(Icons.menu),
               onPressed: () {},
             ),
           ],
@@ -110,10 +109,9 @@ class _ResumesScreenState extends State<ResumesScreen> {
                   hintStyle: const TextStyle(color: Colors.grey),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
-                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide.none
                   ),
                 ),
               ),
@@ -131,7 +129,6 @@ class _ResumesScreenState extends State<ResumesScreen> {
                 itemBuilder: (context, index) {
                   final resume = _filteredResumes[index];
                   return Card(
-                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -152,7 +149,6 @@ class _ResumesScreenState extends State<ResumesScreen> {
                           Text(
                             resume.specializationName ?? 'Не указана',
                             style: const TextStyle(
-                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -169,7 +165,7 @@ class _ResumesScreenState extends State<ResumesScreen> {
                               Expanded(
                                 child: Text(
                                   'Имя: ${resume.applicantName ?? 'Не указано'}',
-                                  style: const TextStyle(color: Colors.blue, fontSize: 16),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
                                 ),
                               ),
                             ],

@@ -714,6 +714,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
+                            color: Colors.black
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -733,9 +734,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                  color: Colors.black
+
                               ),
                             ),
                             ToggleButtons(
+                              color: Colors.black,
+                              borderColor: Colors.grey,
                               isSelected: _roleSelection,
                               onPressed: (int index) {
                                 setState(() {
@@ -745,7 +750,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                               borderRadius: BorderRadius.circular(20),
-                              borderWidth: 2,
+                              borderWidth: 1,
                               selectedColor: Colors.white,
                               fillColor: Theme.of(context).colorScheme.primary,
                               children: const [
@@ -775,6 +780,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               filled: true,
                               fillColor: Colors.white,
+                              labelStyle: TextStyle(color: Colors.black),
                             ),
                             onFieldSubmitted: (_) {
                               FocusScope.of(context).requestFocus(_passNode);

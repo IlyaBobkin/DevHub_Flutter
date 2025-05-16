@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart'; // Для форматирования даты
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
+import 'package:my_new_project/repositories/main/model/resume.dart';
 
 class ResumeDetailScreen extends StatefulWidget {
-  final String vacancyId;
+  final String resumeId;
 
-  const ResumeDetailScreen({super.key, required this.vacancyId});
+  const ResumeDetailScreen({super.key, required this.resumeId});
 
   @override
   State<ResumeDetailScreen> createState() => _ResumeDetailScreenState();
@@ -16,7 +16,7 @@ class ResumeDetailScreen extends StatefulWidget {
 
 class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
   final ApiService _apiService = ApiService();
-  Vacancy? _vacancy;
+  Resume? _resume;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -24,30 +24,31 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
   void initState() {
     initializeDateFormatting('ru');
     super.initState();
-    _loadVacancy();
+    _loadResume();
   }
 
-  Future<void> _loadVacancy() async {
+  Future<void> _loadResume() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
-      final vacancy = await _apiService.getVacancyById(widget.vacancyId);
+      final resumeData = await _apiService.getResumeById(widget.resumeId);
+      print(resumeData);
       setState(() {
-        _vacancy = vacancy;
+        _resume = Resume.fromJson(resumeData);
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Ошибка загрузки вакансии: $e';
+        _errorMessage = 'Ошибка загрузки резюме: $e';
         _isLoading = false;
       });
     }
   }
 
   Future<void> _sendResponse() async {
-    if (_vacancy == null) return;
+    if (_resume == null) return;
 
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('user_id');
@@ -57,37 +58,24 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
       );
       return;
     }
-    // Проверка наличия резюме
-    try {
-      final resume = await _apiService.getMyResume();
-      if (resume!.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Сначала создайте резюме')),
-        );
-        return;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка проверки резюме: $e')),
-      );
-      return;
-    }
 
-    final currentDateTime = DateTime.now(); // 12:19 PM PDT, 14 мая 2025
+    final currentDateTime = DateTime.now(); // 05:51 PM CEST, 16 мая 2025
     final formattedDate = DateFormat.yMd('ru').format(currentDateTime);
-    final message = 'Отклик на вакансию от $formattedDate';
+    final message = 'Интерес к резюме от $formattedDate';
 
     try {
-      debugPrint('Sending response: vacancyId=$widget.vacancyId, userId=$userId, message=$message');
-      final response = await _apiService.createVacancyResponse(widget.vacancyId, message, userId: userId);
+      debugPrint('Sending response: resumeId=${widget.resumeId}, userId=$userId, message=$message');
+      // Assuming a method to create a response or invitation for a resume
+      final response = await _apiService.createVacancyInvitation(widget.resumeId, userId, message);
       debugPrint('Response data: $response');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Отклик успешно отправлен!')),
+        const SnackBar(content: Text('Запрос успешно отправлен!')),
       );
+      Navigator.pop(context, true); // Return to refresh the list
     } catch (e) {
       debugPrint('Error sending response: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка отправки отклика: $e')),
+        SnackBar(content: Text('Ошибка отправки запроса: $e')),
       );
     }
   }
@@ -96,7 +84,7 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Детали вакансии'),
+        title: const Text('Детали резюме'),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -104,8 +92,8 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
             ? Center(child: Text(_errorMessage!))
-            : _vacancy == null
-            ? const Center(child: Text('Вакансия не найдена'))
+            : _resume == null
+            ? const Center(child: Text('Резюме не найдено'))
             : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,37 +102,39 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Опубликовано: ${DateFormat.yMMMd('ru').format(_vacancy!.createdAt)}',
+                  'Создано: ${DateFormat.yMMMd('ru').format(_resume!.createdAt)}',
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _vacancy!.title,
+                  _resume!.specializationName ?? 'Без названия',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_vacancy!.salaryFrom} - ${_vacancy!.salaryTo} ₽ в месяц',
+                  "Соискатель: ${_resume!.applicantName ?? 'Не указан'}",
                   style: const TextStyle(fontSize: 20, color: Colors.blue),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Уровень: ${_vacancy!.experienceLevel}",
+                  _resume!.expectedSalary != null
+                      ? 'Ожидаемая зарплата: ${_resume!.expectedSalary} ₽'
+                      : 'Ожидаемая зарплата: не указана',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Уровень опыта: ${_resume!.experienceLevel ?? 'Не указан'}",
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Компания: ${_vacancy!.companyName}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Местоположение: ${_vacancy!.location}',
+                  'Местоположение: ${_resume!.location ?? 'Не указано'}',
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Описание: ${_vacancy!.description}',
+                  'Описание: ${_resume!.description ?? 'Не указано'}',
                   style: const TextStyle(fontSize: 16),
                 ),
               ],
@@ -163,7 +153,7 @@ class _ResumeDetailScreenState extends State<ResumeDetailScreen> {
                   elevation: 10,
                 ),
                 child: const Text(
-                  'Откликнуться',
+                  'Отправить приглашение',
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),

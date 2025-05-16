@@ -3,9 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
+import '../../../../job_app.dart';
 import '../../../authorization/view/login_screen.dart';
-import 'actions/create_resume_screen.dart';
-import 'actions/edit_resume_screen.dart';
+import 'applicant/actions/create_resume_screen.dart';
+import 'applicant/actions/edit_resume_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -24,12 +25,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Map<String, dynamic>> _specializations = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isDarkTheme = false;
 
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('ru');
     _loadUserData();
+    _loadTheme();
   }
 
   Future<void> _loadUserData() async {
@@ -66,6 +69,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = (prefs.getInt('themeIndex') ?? 0) == 1;
+    });
+  }
+
+  Future<void> _toggleTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = !_isDarkTheme;
+      final newThemeIndex = _isDarkTheme ? 1 : 0;
+      prefs.setInt('themeIndex', newThemeIndex);
+      themeIndexNotifier.value = newThemeIndex; // Update the ValueNotifier
+    });
   }
 
   Future<void> _deleteResume() async {
@@ -319,6 +339,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ],
+              const SizedBox(height: 16),
+              const Text(
+                'Настройки темы',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Темная тема',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  Switch(
+                    value: _isDarkTheme,
+                    onChanged: (value) {
+                      _toggleTheme();
+                    },
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Выберите тему для приложения. Темная тема может быть удобна в условиях низкой освещенности.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(

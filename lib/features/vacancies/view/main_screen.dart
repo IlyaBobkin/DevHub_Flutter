@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/profile/profile_screen.dart';
 import 'package:my_new_project/features/vacancies/view/responses/responses_screen.dart';
+import 'package:my_new_project/features/vacancies/view/resumes/resumes_screen.dart';
 import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
-import 'package:my_new_project/features/vacancies/view/vacancies/company/company_vacancies_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../repositories/main/api_service.dart';
 import '../../authorization/view/login_screen.dart';
@@ -92,13 +92,13 @@ class _MainScreenState extends State<MainScreen> {
                   return MaterialPageRoute(
                     builder: (context) => (_userRole == 'applicant')
                         ? const ApplicantVacanciesScreen()
-                        : const CompanyVacanciesScreen(),
+                        : const ResumesScreen(),
                   );
                 }
                 return MaterialPageRoute(
                   builder: (context) => (_userRole == 'applicant')
                       ? const ApplicantVacanciesScreen()
-                      : const CompanyVacanciesScreen(),
+                      : const ResumesScreen(),
                 );
               },
             ),
@@ -143,10 +143,10 @@ class _MainScreenState extends State<MainScreen> {
         bottomNavigationBar: NavigationBar(
           destinations: [
             NavigationDestination(
-              icon: Icon(CupertinoIcons.briefcase, color: Colors.black),
-              selectedIcon: Icon(CupertinoIcons.briefcase_fill, color: Theme.of(context).colorScheme.primary),
-              label: (_userRole == 'applicant') ? "Вакансии" : "Мои вакансии",
-              tooltip: (_userRole == 'applicant') ? "Вакансии" : "Мои вакансии",
+              icon: Icon((_userRole == 'applicant') ? CupertinoIcons.briefcase: CupertinoIcons.doc_text, color: Colors.black),
+              selectedIcon: Icon((_userRole == 'applicant') ? CupertinoIcons.briefcase_fill: CupertinoIcons.doc_text_fill, color: Theme.of(context).colorScheme.primary),
+              label: (_userRole == 'applicant') ? "Вакансии" : "Резюме",
+              tooltip: (_userRole == 'applicant') ? "Вакансии" : "Резюме",
             ),
             NavigationDestination(
               icon: Icon(CupertinoIcons.mail, color: Colors.black),

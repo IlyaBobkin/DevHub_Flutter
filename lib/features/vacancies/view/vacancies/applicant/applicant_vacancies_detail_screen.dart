@@ -5,16 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:my_new_project/repositories/main/model/vacancy.dart';
 
-class VacancyDetailScreen extends StatefulWidget {
+class ApplicantVacancyDetailScreen extends StatefulWidget {
   final String vacancyId;
 
-  const VacancyDetailScreen({super.key, required this.vacancyId});
+  const ApplicantVacancyDetailScreen({super.key, required this.vacancyId});
 
   @override
-  State<VacancyDetailScreen> createState() => _VacancyDetailScreenState();
+  State<ApplicantVacancyDetailScreen> createState() => _ApplicantVacancyDetailScreenState();
 }
 
-class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
+class _ApplicantVacancyDetailScreenState extends State<ApplicantVacancyDetailScreen> {
   final ApiService _apiService = ApiService();
   Vacancy? _vacancy;
   bool _isLoading = true;
@@ -124,7 +124,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_vacancy!.salaryFrom.toStringAsFixed(0)} - ${_vacancy!.salaryTo.toStringAsFixed(0)} ₽',
+                  '${_vacancy!.salaryFrom} - ${_vacancy!.salaryTo} ₽',
                   style: const TextStyle(fontSize: 20, color: Colors.blue),
                 ),
                 const SizedBox(height: 8),

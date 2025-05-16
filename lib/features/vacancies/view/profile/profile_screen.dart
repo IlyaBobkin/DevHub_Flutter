@@ -4,8 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import '../../../authorization/view/login_screen.dart';
-import 'create_resume_screen.dart';
-import 'edit_resume_screen.dart';
+import 'actions/create_resume_screen.dart';
+import 'actions/edit_resume_screen.dart';
+import 'actions/create_vacancy_screen.dart'; // Новый импорт
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _userName;
   String? _userEmail;
   String? _userRole;
+  DateTime _userDate = DateTime.now();
   Map<String, dynamic>? _resume;
   List<Map<String, dynamic>> _specializations = [];
   bool _isLoading = true;
@@ -41,11 +43,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       String? userId = prefs.getString('user_id');
       if (userId == null) throw Exception('Пользователь не авторизован');
       final userInfo = await _apiService.getUserProfileById(userId);
-      final resume = await _apiService.getMyResume();
+      Map<String, dynamic>? resume = null;
+      if (userInfo['role'] == 'applicant') {
+        resume = await _apiService.getMyResume();
+      }
       final specializations = await _apiService.getSpecializations();
       setState(() {
         _userName = userInfo['name'] ?? 'Не указано';
         _userEmail = userInfo['email'] ?? 'Не указано';
+        _userDate = DateTime.parse(userInfo['created_at'] as String) ?? DateTime.now();
         _userRole = userInfo['role'] == 'applicant'
             ? 'Соискатель'
             : userInfo['role'] == 'company_owner'
@@ -68,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await _apiService.deleteResume(_resume!['id']);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Резюме удалено!')));
-      await _loadUserData(); // Перезагружаем данные после удаления
+      await _loadUserData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
     }
@@ -201,12 +207,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const Icon(Icons.calendar_month, color: Colors.grey, size: 24),
                         const SizedBox(width: 8),
                         Text(
-                          'Дата регистрации: ${DateFormat.yMMMd('ru').format(DateTime.now())}', // 14 мая 2025
+                          'Дата регистрации: ${DateFormat.yMMMd('ru').format(_userDate)}', // 16 мая 2025
                           style: const TextStyle(fontSize: 16, color: Colors.grey),
                         ),
                       ],
                     ),
-                    if (_resume != null) ...[
+                    if (_userRole == 'Соискатель' && _resume != null) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -237,57 +243,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 24),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Местоположение: ${_resume!['location'] ?? 'Не указано'}",
+                              style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                if (_resume != null) {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditResumeScreen(resume: _resume!),
-                    ),
-                  );
-                  if (result == true) {
-                    await _loadUserData(); // Перезагружаем данные после редактирования
+            if (_userRole == 'Соискатель') ...[
+              ElevatedButton(
+                onPressed: () async {
+                  if (_resume != null) {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditResumeScreen(resume: _resume!),
+                      ),
+                    );
+                    if (result == true) {
+                      await _loadUserData();
+                    }
+                  } else {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CreateResumeScreen()),
+                    );
+                    if (result == true) {
+                      await _loadUserData();
+                    }
                   }
-                } else {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CreateResumeScreen()),
-                  );
-                  if (result == true) {
-                    await _loadUserData(); // Перезагружаем данные после создания
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 6,
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 6,
+                ),
+                child: Text(
+                  _resume != null ? 'Редактировать резюме' : 'Создать резюме',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              child: Text(
-                _resume != null ? 'Редактировать резюме' : 'Создать резюме',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-            if (_resume != null) ...[
+              if (_resume != null) ...[
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _deleteResume,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 6,
+                  ),
+                  child: const Text(
+                    'Удалить резюме',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ],
+            ],
+            if (_userRole == 'Работодатель') ...[
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _deleteResume,
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CreateVacancyScreen()),
+                  );
+                  if (result == true) {
+                    await _loadUserData(); // Можно обновить, если нужно
+                  }
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 6,
                 ),
                 child: const Text(
-                  'Удалить резюме',
+                  'Создать вакансию',
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),

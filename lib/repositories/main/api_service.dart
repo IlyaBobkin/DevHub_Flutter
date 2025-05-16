@@ -11,7 +11,7 @@ class ApiService {
   static const String _keycloakAddress = 'http://10.0.2.2:8086';
   final Dio _dio = Dio();
 
-  // Универсальный метод для выполнения запросов с поддержкой токенов и обновления
+/*  // Универсальный метод для выполнения запросов с поддержкой токенов и обновления
   Future<Response> apiFetch(String path, {required String method, dynamic data, bool requiresAuth = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
@@ -60,6 +60,73 @@ class ApiService {
           await prefs.clear(); // Очистка сессии
           throw Exception('Сессия истекла. Пожалуйста, войдите снова.');
         }
+      }
+
+      return response;
+    } catch (e) {
+      debugPrint('API Error: $e');
+      throw Exception('Ошибка запроса: $e');
+    }
+  }
+
+  */
+  Future<Response> apiFetch(String path, {required String method, dynamic data, bool requiresAuth = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    final refreshToken = prefs.getString('refresh_token');
+
+    if (requiresAuth && accessToken == null) {
+      debugPrint('No access token found, redirecting to login');
+      throw Exception('Токен авторизации отсутствует. Пожалуйста, войдите заново.');
+    }
+
+    final headers = {
+      'Content-Type': 'application/json',
+      if (requiresAuth) 'Authorization': 'Bearer $accessToken',
+    };
+
+    try {
+      debugPrint('Making request to $_apiAddress$path with token: $accessToken');
+      final response = await _dio.request(
+        '$_apiAddress$path',
+        options: Options(method: method, headers: headers),
+        data: data != null ? jsonEncode(data) : null,
+      );
+
+      if (response.statusCode == 401 && refreshToken != null) {
+        debugPrint('Received 401, attempting to refresh token');
+        final refreshResponse = await _dio.post(
+          '$_keycloakAddress/realms/hh_realm/protocol/openid-connect/token',
+          data: {
+            'grant_type': 'refresh_token',
+            'client_id': 'frontend',
+            'refresh_token': refreshToken,
+          },
+          options: Options(contentType: 'application/x-www-form-urlencoded'),
+        );
+
+        if (refreshResponse.statusCode == 200) {
+          final tokenData = refreshResponse.data as Map<String, dynamic>;
+          await prefs.setString('access_token', tokenData['access_token']);
+          await prefs.setString('refresh_token', tokenData['refresh_token']);
+          debugPrint('Token refreshed successfully: ${tokenData['access_token']}');
+
+          headers['Authorization'] = 'Bearer ${tokenData['access_token']}';
+          return await _dio.request(
+            '$_apiAddress$path',
+            options: Options(method: method, headers: headers),
+            data: data != null ? jsonEncode(data) : null,
+          );
+        } else {
+          debugPrint('Failed to refresh token: ${refreshResponse.statusCode} - ${refreshResponse.data}');
+          await prefs.clear();
+          throw Exception('Сессия истекла. Пожалуйста, войдите снова.');
+        }
+      }
+
+      if (response.statusCode == 403) {
+        debugPrint('Received 403 Forbidden for path: $path');
+        throw Exception('Доступ запрещён: недостаточно прав для выполнения запроса.');
       }
 
       return response;
@@ -160,9 +227,16 @@ class ApiService {
   Future<List<dynamic>> getMyVacancies() async {
     final response = await apiFetch('/vacancies/my', method: 'GET', requiresAuth: true);
     if (response.statusCode != 200) {
+      debugPrint('Response status: ${response.statusCode}, data: ${response.data}');
       throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка при получении вакансий');
     }
-    return response.data as List<dynamic>;
+    // Проверяем, что response.data не null, и возвращаем пустой список при необходимости
+    final data = response.data;
+    if (data == null) {
+      debugPrint('Received null data for /vacancies/my, returning empty list');
+      return [];
+    }
+    return data as List<dynamic>;
   }
 
   Future<Map<String, dynamic>> updateVacancy(String vacancyId, {

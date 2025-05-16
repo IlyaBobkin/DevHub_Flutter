@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:my_new_project/features/vacancies/view/vacancies/vacancies_detail_screen.dart';
-import '../../../../repositories/main/model/vacancy.dart';
-import '../../../../repositories/main/repository.dart';
+import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_detail_screen.dart';
 
-class VacanciesScreen extends StatefulWidget {
-  const VacanciesScreen({super.key});
+import '../../../../../repositories/main/model/vacancy.dart';
+import '../../../../../repositories/main/repository.dart';
+
+class ApplicantVacanciesScreen extends StatefulWidget {
+  const ApplicantVacanciesScreen({super.key});
 
   @override
-  State<VacanciesScreen> createState() => _VacanciesScreenState();
+  State<ApplicantVacanciesScreen> createState() => _ApplicantVacanciesScreenState();
 }
 
-class _VacanciesScreenState extends State<VacanciesScreen> {
+class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
   String _searchQuery = '';
   String _selectedFilter = 'Frontend';
   List<Vacancy> _vacanciesList = [];
@@ -46,9 +47,9 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
   List<Vacancy> get _filteredVacancies {
     return _vacanciesList.where((vacancy) {
       final matchesSearch = vacancy.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          vacancy.specializationName.toLowerCase().contains(_searchQuery.toLowerCase());
+          vacancy.specializationName!.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesFilter = _selectedFilter.isEmpty ||
-          vacancy.specializationName.toLowerCase().contains(_selectedFilter.toLowerCase());
+          vacancy.specializationName!.toLowerCase().contains(_selectedFilter.toLowerCase());
       return matchesSearch && matchesFilter;
     }).toList();
   }
@@ -98,7 +99,7 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                         onSelect: (vacancyId) {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => VacancyDetailScreen(vacancyId: vacancyId),
+                              builder: (context) => ApplicantVacancyDetailScreen(vacancyId: vacancyId),
                             ),
                           );
                         },
@@ -159,26 +160,34 @@ class _VacanciesScreenState extends State<VacanciesScreen> {
                       children: [
                         const SizedBox(height: 2),
                         Text(
-                          '${vacancy.salaryFrom.toStringAsFixed(2)} - ${vacancy.salaryTo.toStringAsFixed(2)} ₽ в месяц',
+                          '${vacancy.salaryFrom} - ${vacancy.salaryTo} ₽ в месяц',
                           style: const TextStyle(color: Colors.blue, fontSize: 15),
                         ),
                         Text(
-                          vacancy.companyName,
+                          vacancy.companyName ?? 'Не указано',
                           style: const TextStyle(color: Colors.grey),
                         ),
-                        Text(
-                          vacancy.location,
-                          style: const TextStyle(color: Colors.grey),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child:                         Text(
+                                vacancy.location ?? 'Местоположение не указано',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    trailing: const Icon(Icons.favorite_border, color: Colors.black),
+                    trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
                     isThreeLine: true,
                     subtitleTextStyle: const TextStyle(color: Colors.grey),
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => VacancyDetailScreen(vacancyId: vacancy.id),
+                          builder: (context) => ApplicantVacancyDetailScreen(vacancyId: vacancy.id),
                         ),
                       );
                     },
@@ -250,7 +259,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
   Widget buildResults(BuildContext context) {
     final results = vacancies.where((vacancy) {
       return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
-          vacancy.specializationName.toLowerCase().contains(query.toLowerCase());
+          vacancy.specializationName!.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return ListView.builder(
@@ -259,7 +268,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
         final vacancy = results[index];
         return ListTile(
           title: Text(vacancy.title),
-          subtitle: Text(vacancy.specializationName),
+          subtitle: Text(vacancy.specializationName ?? 'Не указано'),
           onTap: () {
             onSelect(vacancy.id);
             close(context, vacancy.id);
@@ -273,7 +282,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
   Widget buildSuggestions(BuildContext context) {
     final suggestions = vacancies.where((vacancy) {
       return vacancy.title.toLowerCase().contains(query.toLowerCase()) ||
-          vacancy.specializationName.toLowerCase().contains(query.toLowerCase());
+          vacancy.specializationName!.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     return ListView.builder(
@@ -282,7 +291,7 @@ class VacancySearchDelegate extends SearchDelegate<String> {
         final vacancy = suggestions[index];
         return ListTile(
           title: Text(vacancy.title),
-          subtitle: Text(vacancy.specializationName),
+          subtitle: Text(vacancy.specializationName ?? 'Не указано'),
           onTap: () {
             query = vacancy.title;
             showResults(context);

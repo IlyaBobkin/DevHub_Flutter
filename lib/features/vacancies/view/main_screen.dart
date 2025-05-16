@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_new_project/features/vacancies/view/profile/profile_screen.dart';
 import 'package:my_new_project/features/vacancies/view/responses/responses_screen.dart';
-import 'package:my_new_project/features/vacancies/view/vacancies/vacancies_screen.dart';
+import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
+import 'package:my_new_project/features/vacancies/view/vacancies/company/company_vacancies_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../repositories/main/api_service.dart';
 import '../../authorization/view/login_screen.dart';
 import 'chats/chats_screen.dart';
 import 'notifications/notifications_screen.dart';
@@ -18,6 +20,10 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int currentPageIndex = 0;
+  final ApiService _apiService = ApiService();
+  String? _userRole;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   // Ключи для Navigator каждой вкладки
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -27,6 +33,34 @@ class _MainScreenState extends State<MainScreen> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      String? userId = prefs.getString('user_id');
+      if (userId == null) throw Exception('Пользователь не авторизован');
+      final userInfo = await _apiService.getUserProfileById(userId);
+      setState(() {
+        _userRole = userInfo['role'];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Ошибка загрузки данных: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
 
   @override
@@ -40,7 +74,7 @@ class _MainScreenState extends State<MainScreen> {
             key: _navigatorKeys[0],
             onGenerateRoute: (settings) {
               return MaterialPageRoute(
-                builder: (context) => const VacanciesScreen(),
+                builder: (context) => (_userRole == 'applicant') ? const ApplicantVacanciesScreen() : const CompanyVacanciesScreen(),
               );
             },
           ),
@@ -87,8 +121,8 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(CupertinoIcons.briefcase, color: Colors.black),
             selectedIcon: Icon(CupertinoIcons.briefcase_fill, color: Theme.of(context).colorScheme.primary),
-            label: "Вакансии",
-            tooltip: "Вакансии",
+            label: (_userRole == 'applicant') ? "Вакансии": "Мои вакансии",
+            tooltip: (_userRole == 'applicant') ? "Вакансии": "Мои вакансии",
           ),
           NavigationDestination(
             icon: Icon(CupertinoIcons.mail, color: Colors.black),

@@ -29,7 +29,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Future<String> getAdminToken() async {
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8086/realms/master/protocol/openid-connect/token'),
+      Uri.parse('http://192.168.1.157:8086/realms/master/protocol/openid-connect/token'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -45,13 +45,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       final data = jsonDecode(response.body);
       return data['access_token'] as String;
     } else {
-      throw Exception('Не удалось получить токен администратора: ${response.body}');
+      throw Exception('Не удалось получить токен администратора: ${response.statusCode} - ${response.body}');
     }
   }
 
   Future<String> getUserId(String adminToken, String email) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/users?email=$email'),
+      Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/users?email=$email'),
       headers: {
         'Authorization': 'Bearer $adminToken',
       },
@@ -65,13 +65,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         throw Exception('Пользователь с email $email не найден');
       }
     } else {
-      throw Exception('Не удалось найти пользователя: ${response.body}');
+      throw Exception('Не удалось найти пользователя: ${response.statusCode} - ${response.body}');
     }
   }
 
   Future<Map<String, dynamic>> getRoleByName(String adminToken, String roleName) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/roles/$roleName'),
+      Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/roles/$roleName'),
       headers: {
         'Authorization': 'Bearer $adminToken',
       },
@@ -80,15 +80,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Не удалось найти роль $roleName: ${response.body}');
+      throw Exception('Не удалось найти роль $roleName: ${response.statusCode} - ${response.body}');
     }
   }
 
   Future<void> assignRoleToUser(String adminToken, String userId, String roleName) async {
-    // Получаем информацию о роли
     final role = await getRoleByName(adminToken, roleName);
-
-    // Формируем данные для назначения роли
     final roleMapping = [
       {
         'id': role['id'],
@@ -96,9 +93,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       }
     ];
 
-    // Назначаем роль пользователю
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8086/admin/realms/hh_realm/users/$userId/role-mappings/realm'),
+      Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/users/$userId/role-mappings/realm'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $adminToken',
@@ -107,7 +103,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
 
     if (response.statusCode != 201 && response.statusCode != 204) {
-      throw Exception('Не удалось назначить роль: ${response.body}');
+      throw Exception('Не удалось назначить роль: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -122,23 +118,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           'email': _emailController.text,
           'password': _passwordController.text,
           'role': role,
-          if (_roleSelection[1]) 'companyName': _companyNameController.text,
-          if (_roleSelection[1]) 'companyDescription': _companyDescController.text,
+          'companyName': _roleSelection[1] ? _companyNameController.text : '',
+          'companyDescription': _roleSelection[1] ? _companyDescController.text : '',
         };
 
+        debugPrint('Register payload: ${jsonEncode(data)}');
+
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:8080/user/register'),
+          Uri.parse('http://192.168.1.157:8080/user/register'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(data),
         );
 
         if (response.statusCode == 201) {
-          // Автоматический вход после регистрации
           await _loginAfterRegistration();
         } else {
-          throw Exception('Ошибка регистрации: ${response.body}');
+          debugPrint('Registration failed: ${response.statusCode} - ${response.body}');
+          throw Exception('Ошибка регистрации: ${response.statusCode} - ${response.body}');
         }
       } catch (e) {
+        debugPrint('Registration error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: $e')),
         );
@@ -151,7 +150,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<void> _loginAfterRegistration() async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
+        Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/token'),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -204,16 +203,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           throw Exception('Не удалось получить токены после регистрации.');
         }
       } else {
-        throw Exception('Ошибка входа после регистрации: ${response.body}');
+        debugPrint('Login failed after registration: ${response.statusCode} - ${response.body}');
+        throw Exception('Ошибка входа после регистрации: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      debugPrint('Login error after registration: $e');
       throw Exception('Ошибка входа после регистрации: $e');
     }
   }
 
   Future<Map<String, dynamic>> fetchUserInfo(String token) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
@@ -225,7 +226,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Future<Map<String, dynamic>> fetchProfile(String token) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8080/user/profile'),
+      Uri.parse('http://192.168.1.157:8080/user/profile'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {

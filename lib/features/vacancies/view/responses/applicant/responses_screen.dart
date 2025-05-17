@@ -63,7 +63,7 @@ class _ResponsesScreenState extends State<ResponsesScreen> {
         itemBuilder: (context, index) {
           final response = _responses[index];
           final vacancyTitle = response['item_title'] ?? 'Не указана';
-          final status = response['status'] ?? '-';
+          final status = (response['status'] == 'accepted') ? 'принято' : (response['status'] == 'pending') ? 'ожидание' : 'отклонено';
           final createdAt = response['created_at'] != null
               ? DateFormat.yMMMd('ru').format(DateTime.parse(response['created_at']))
               : 'Не указано';

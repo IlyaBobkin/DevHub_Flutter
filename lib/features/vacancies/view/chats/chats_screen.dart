@@ -1,11 +1,47 @@
-// Экран "Чаты"
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:my_new_project/repositories/main/api_service.dart';
 import 'chat_detail_screen.dart';
 
-class ChatsScreen extends StatelessWidget {
+class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});
+
+  @override
+  State<ChatsScreen> createState() => _ChatsScreenState();
+}
+
+class _ChatsScreenState extends State<ChatsScreen> {
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> _chats = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    initializeDateFormatting('ru');
+    super.initState();
+    _loadChats();
+  }
+
+  Future<void> _loadChats() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final chats = await _apiService.getChatsList();
+      setState(() {
+        _chats = chats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Ошибка загрузки чатов: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,19 +49,44 @@ class ChatsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Чаты'),
       ),
-      body: ListView.builder(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadChats,
+              child: const Text('Повторить попытку'),
+            ),
+          ],
+        ),
+      )
+          : _chats.isEmpty
+          ? const Center(child: Text('Нет доступных чатов'))
+          : ListView.builder(
         padding: const EdgeInsets.all(8.0),
-        itemCount: 3,
+        itemCount: _chats.length,
         itemBuilder: (context, index) {
+          final chat = _chats[index];
+          final createdAt = chat['createdAt'] != null
+              ? DateFormat.yMMMd('ru').format(DateTime.parse(chat['createdAt']))
+              : 'Не указано';
+
           return Card(
             child: ListTile(
-              leading: const Icon(CupertinoIcons.chat_bubble_2),
-              title: Text('Чат ${index + 1}'),
-              subtitle: const Text('Последнее сообщение: Привет!'),
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: Text(chat['opponentName'] ?? 'Неизвестный'),
+              subtitle: Text(
+                '${chat['contextTitle'] ?? 'Без темы'} • $createdAt',
+              ),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChatDetailScreen(chatId: index + 1),
+                    builder: (context) => ChatDetailScreen(chatId: chat['id'].toString()),
                   ),
                 );
               },

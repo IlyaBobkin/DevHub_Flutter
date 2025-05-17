@@ -651,7 +651,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<Map<String, dynamic>> fetchUserInfo(String token) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
@@ -663,7 +664,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<Map<String, dynamic>> fetchProfile(String token) async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8080/user/profile'),
+      //Uri.parse('http://10.0.2.2:8080/user/profile'),
+      Uri.parse('http://192.168.1.157:8080/user/profile'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {

@@ -38,7 +38,7 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
         setState(() {
           _vacanciesList = vacancies.map((v) {
             debugPrint('Vacancy JSON: $v');
-            return Vacancy.fromJson(v as Map<String, dynamic>);
+            return Vacancy.fromJson(v);
           }).toList();
           _isLoading = false;
         });
@@ -87,13 +87,12 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
               SizedBox(width: 8),
               Text(
                 'Мои вакансии',
-                style: TextStyle(color: Colors.black),
               ),
             ],
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.menu, color: Colors.black),
+              icon: const Icon(Icons.menu),
               onPressed: () {},
             ),
           ],
@@ -113,7 +112,6 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
                   hintStyle: const TextStyle(color: Colors.grey),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
-                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
@@ -134,7 +132,6 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
                 itemBuilder: (context, index) {
                   final vacancy = _filteredVacancies[index];
                   return Card(
-                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -155,7 +152,6 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
                           Text(
                             vacancy.title,
                             style: const TextStyle(
-                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

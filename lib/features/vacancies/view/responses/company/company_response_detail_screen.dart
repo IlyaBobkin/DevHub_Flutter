@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:my_new_project/features/vacancies/view/responses/company/response_resume_screen.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CompanyResponseDetailScreen extends StatefulWidget {
   final String responseId;
@@ -69,12 +70,34 @@ class _CompanyResponseDetailScreenState extends State<CompanyResponseDetailScree
         _response = updatedResponse;
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Статус обновлён на "$status"')),
-      );
+
+      if (status == 'accepted') {
+        final prefs = await SharedPreferences.getInstance();
+        final companyOwnerId = prefs.getString('user_id'); // Assuming user_id is the company owner ID
+        final applicantId = _response!['applicant_id'].toString();
+
+        if (companyOwnerId != null) {
+          await _apiService.createChat(
+            applicantId: applicantId,
+            companyOwnerId: companyOwnerId,
+            vacancyId: vacancyId.toString(),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Отклик принят, чат создан')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ошибка: не удалось создать чат')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ответ на отклик отправлен')),
+        );
+      }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Ошибка обновления статуса: $e';
+        _errorMessage = 'Ошибка обновления статуса или создания чата: $e';
         _isLoading = false;
       });
     }
@@ -87,7 +110,6 @@ class _CompanyResponseDetailScreenState extends State<CompanyResponseDetailScree
       );
       return;
     }
-    // Assuming applicant_id is the resumeId or can be used to fetch the resume
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ResponseResumeScreen(resumeId: _response!['applicant_id'].toString()),
@@ -99,7 +121,7 @@ class _CompanyResponseDetailScreenState extends State<CompanyResponseDetailScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Детали отклика работодателя'),
+        title: const Text('Детали отклика'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -124,75 +146,88 @@ class _CompanyResponseDetailScreenState extends State<CompanyResponseDetailScree
             : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Отклик на вакансию ${_response!['vacancy_title'] ?? _response!['item_title'] ?? 'Не указана'}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Дата создания: ${_response!['created_at'] != null ? DateFormat.yMMMd('ru').format(DateTime.parse(_response!['created_at'])) : 'Не указана'}',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Соискатель: ${_response!['applicant_name'] ?? 'Не указан'}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Статус: ${_response!['status'] ?? 'Не указан'}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Сообщение: ${_response!['message'] ?? 'Отсутствует'}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _updateResponseStatus('accepted'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Отклик на вакансию ${_response!['vacancy_title'] ?? _response!['item_title'] ?? 'Не указана'}',
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  child: const Text('Принять'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _updateResponseStatus('rejected'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Дата создания: ${_response!['created_at'] != null ? DateFormat.yMMMd('ru').format(DateTime.parse(_response!['created_at'])) : 'Не указана'}',
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                  ),
-                  child: const Text('Отклонить'),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Соискатель: ${_response!['applicant_name'] ?? 'Не указан'}',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Статус: ${_response!['status'] == 'accepted' ? 'приглашен' : _response!['status'] == 'rejected' ? 'отклонен' : 'ожидание'}',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Сообщение: ${_response!['message'] ?? 'Отсутствует'}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _viewResume,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Просмотреть резюме'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: _viewResume,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text('Просмотреть резюме'),
               ),
             ),
+            const SizedBox(height: 8),
+            if (_response!['status'] == 'pending')...[
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateResponseStatus('accepted'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Принять'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateResponseStatus('rejected'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Отклонить'),
+                    ),
+                  ),
+                ],
+              ),
+            ]
           ],
         ),
       ),

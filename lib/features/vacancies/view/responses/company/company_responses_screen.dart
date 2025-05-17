@@ -86,7 +86,7 @@ class _CompanyResponsesScreenState extends State<CompanyResponsesScreen> {
             margin: const EdgeInsets.symmetric(vertical: 4.0),
             child: ListTile(
               leading: const Icon(Icons.mail_outline),
-              title: Text('Отклик на "$vacancyTitle"'),
+              title: Text('Отклик на вакансию "$vacancyTitle"'),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

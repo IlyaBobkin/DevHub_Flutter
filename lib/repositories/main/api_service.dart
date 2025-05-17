@@ -7,69 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'model/vacancy.dart';
 
 class ApiService {
-  static const String _apiAddress = 'http://10.0.2.2:8080';
-  static const String _keycloakAddress = 'http://10.0.2.2:8086';
+/*  static const String _apiAddress = 'http://10.0.2.2:8080';
+  static const String _keycloakAddress = 'http://10.0.2.2:8086';  */
+  static const String _apiAddress = 'http://192.168.1.157:8080';
+  static const String _keycloakAddress = 'http://192.168.1.157:8086';
   final Dio _dio = Dio();
 
-/*  // Универсальный метод для выполнения запросов с поддержкой токенов и обновления
-  Future<Response> apiFetch(String path, {required String method, dynamic data, bool requiresAuth = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('access_token');
-    final refreshToken = prefs.getString('refresh_token');
-
-    if (requiresAuth && accessToken == null) {
-      throw Exception('Токен авторизации отсутствует. Пожалуйста, войдите заново.');
-    }
-
-    final headers = {
-      'Content-Type': 'application/json',
-      if (requiresAuth) 'Authorization': 'Bearer $accessToken',
-    };
-
-    try {
-      final response = await _dio.request(
-        '$_apiAddress$path',
-        options: Options(method: method, headers: headers),
-        data: data != null ? jsonEncode(data) : null,
-      );
-
-      if (response.statusCode == 401 && refreshToken != null) {
-        // Обновление токена
-        final refreshResponse = await _dio.post(
-          '$_keycloakAddress/realms/hh_realm/protocol/openid-connect/token',
-          data: {
-            'grant_type': 'refresh_token',
-            'client_id': 'frontend',
-            'refresh_token': refreshToken,
-          },
-          options: Options(contentType: 'application/x-www-form-urlencoded'),
-        );
-
-        if (refreshResponse.statusCode == 200) {
-          final tokenData = refreshResponse.data as Map<String, dynamic>;
-          await prefs.setString('access_token', tokenData['access_token']);
-          await prefs.setString('refresh_token', tokenData['refresh_token']);
-
-          headers['Authorization'] = 'Bearer ${tokenData['access_token']}';
-          return await _dio.request(
-            '$_apiAddress$path',
-            options: Options(method: method, headers: headers),
-            data: data != null ? jsonEncode(data) : null,
-          );
-        } else {
-          await prefs.clear(); // Очистка сессии
-          throw Exception('Сессия истекла. Пожалуйста, войдите снова.');
-        }
-      }
-
-      return response;
-    } catch (e) {
-      debugPrint('API Error: $e');
-      throw Exception('Ошибка запроса: $e');
-    }
-  }
-
-  */
   Future<Response> apiFetch(String path, {required String method, dynamic data, bool requiresAuth = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
@@ -628,7 +571,8 @@ Future<void> initializeApp() async {
 
 Future<Map<String, dynamic>> refreshTokens(String refreshToken) async {
   final response = await http.post(
-    Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
+    //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
+    Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/token'),
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -649,7 +593,8 @@ Future<Map<String, dynamic>> refreshTokens(String refreshToken) async {
 
 Future<Map<String, dynamic>> fetchUserInfo(String token) async {
   final response = await http.get(
-    Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+    Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+    //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
     headers: {'Authorization': 'Bearer $token'},
   );
   if (response.statusCode == 200) {
@@ -661,7 +606,8 @@ Future<Map<String, dynamic>> fetchUserInfo(String token) async {
 
 Future<Map<String, dynamic>> fetchProfile(String token) async {
   final response = await http.get(
-    Uri.parse('http://10.0.2.2:8080/user/profile'),
+/*    Uri.parse('http://10.0.2.2:8080/user/profile'),*/
+    Uri.parse('http://192.168.1.157:8080/user/profile'),
     headers: {'Authorization': 'Bearer $token'},
   );
   if (response.statusCode == 200) {

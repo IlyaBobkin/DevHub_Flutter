@@ -83,7 +83,7 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Статус: ${_response!['status'] ?? 'Не указан'}',
+              'Статус: ${_response!['status'] == 'accepted' ? 'принято' : _response!['status'] == 'pending' ? 'ожидание' : 'отклонено'}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 16),

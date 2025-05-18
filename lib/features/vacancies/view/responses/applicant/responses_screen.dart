@@ -214,6 +214,7 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
                   : 'Не указано';
               return Card(
                 child: ListTile(
+                  minVerticalPadding: 15,
                   leading: const Icon(Icons.mail),
                   trailing: (status == 'принято') ? Icon(Icons.check_circle_rounded, color: Colors.green)  : (status == 'отклонено') ? Icon(Icons.close, color: Colors.red) : Icon(Icons.pending_outlined, color: Colors.orange),
                   title: Text('Отклик ${index + 1}'),

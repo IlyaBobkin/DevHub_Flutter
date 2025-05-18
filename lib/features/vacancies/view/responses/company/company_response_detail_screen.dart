@@ -179,7 +179,7 @@ class _CompanyResponseDetailScreenState extends State<CompanyResponseDetailScree
                     ElevatedButton(
                       onPressed: _viewResume,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(

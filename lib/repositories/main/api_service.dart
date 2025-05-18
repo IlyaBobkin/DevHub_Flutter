@@ -205,7 +205,7 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<void> deleteVacancy(String vacancyId) async {
+  Future<void> deleteVacancy(String vacancyId, String userId) async {
     final response = await apiFetch('/vacancies/$vacancyId', method: 'DELETE', requiresAuth: true);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка удаления вакансии');

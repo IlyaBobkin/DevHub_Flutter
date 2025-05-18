@@ -163,7 +163,7 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
                           const SizedBox(height: 5),
                           Text(
                             '${vacancy.salaryFrom ?? 'Зарплата не указана'} ${vacancy.salaryTo != null ? '- ${vacancy.salaryTo}' : ''} ₽ в месяц',
-                            style: const TextStyle(color: Colors.blue, fontSize: 15),
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 15),
                           ),
                           const SizedBox(height: 5),
                           Row(

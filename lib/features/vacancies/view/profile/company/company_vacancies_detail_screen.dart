@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:my_new_project/repositories/main/model/vacancy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'actions/edit_vacancy_screen.dart';
 
 class CompanyVacancyDetailScreen extends StatefulWidget {
@@ -48,7 +49,8 @@ class _CompanyVacancyDetailScreenState extends State<CompanyVacancyDetailScreen>
 
   Future<void> _deleteVacancy() async {
     try {
-      await _apiService.deleteVacancy(widget.vacancyId);
+      final prefs = await SharedPreferences.getInstance();
+      await _apiService.deleteVacancy(widget.vacancyId, prefs.getString('user_id') ?? '');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Вакансия удалена!')),
       );
@@ -89,7 +91,7 @@ class _CompanyVacancyDetailScreenState extends State<CompanyVacancyDetailScreen>
             const SizedBox(height: 8),
             Text(
               '${_vacancy!.salaryFrom} - ${_vacancy!.salaryTo} ₽',
-              style: const TextStyle(fontSize: 20, color: Colors.blue),
+              style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 8),
             Text(

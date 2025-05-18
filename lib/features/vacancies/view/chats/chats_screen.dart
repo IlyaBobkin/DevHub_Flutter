@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -11,17 +12,29 @@ class ChatsScreen extends StatefulWidget {
   State<ChatsScreen> createState() => _ChatsScreenState();
 }
 
-class _ChatsScreenState extends State<ChatsScreen> {
+class _ChatsScreenState extends State<ChatsScreen> with RouteAware {
   final ApiService _apiService = ApiService();
   List<Map<String, dynamic>> _chats = [];
   bool _isLoading = true;
   String? _errorMessage;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     initializeDateFormatting('ru');
     super.initState();
     _loadChats();
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      await _loadChats();
+    });
   }
 
   Future<void> _loadChats() async {
@@ -31,16 +44,33 @@ class _ChatsScreenState extends State<ChatsScreen> {
     });
     try {
       final chats = await _apiService.getChatsList();
-      setState(() {
-        _chats = chats;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _chats = chats;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Ошибка загрузки чатов: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Ошибка загрузки чатов: $e';
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  @override
+  void didPopNext() {
+    // Called when returning to this screen
+    _loadChats();
+    super.didPopNext();
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -56,7 +86,8 @@ class _ChatsScreenState extends State<ChatsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!,
+                style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadChats,
@@ -73,7 +104,8 @@ class _ChatsScreenState extends State<ChatsScreen> {
         itemBuilder: (context, index) {
           final chat = _chats[index];
           final createdAt = chat['createdAt'] != null
-              ? DateFormat.yMMMd('ru').format(DateTime.parse(chat['createdAt']))
+              ? DateFormat.yMMMd('ru')
+              .format(DateTime.parse(chat['createdAt']))
               : 'Не указано';
 
           return Card(
@@ -86,7 +118,8 @@ class _ChatsScreenState extends State<ChatsScreen> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChatDetailScreen(chatId: chat['id'].toString()),
+                    builder: (context) => ChatDetailScreen(
+                        chatId: chat['id'].toString()),
                   ),
                 );
               },

@@ -220,7 +220,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       margin: EdgeInsets.only(top: 20),
                       backGroundColor: isSentByMe
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[300],
+                          : Theme.of(context).colorScheme.surface,
                       child: Container(
                         constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width * 0.7,
@@ -233,7 +233,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               style: TextStyle(
                                 color: isSentByMe
                                     ? Theme.of(context).colorScheme.onPrimary
-                                    : Theme.of(context).textTheme.bodyLarge?.color,
+                                    : Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -243,7 +243,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                 fontSize: 10,
                                 color: isSentByMe
                                     ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
-                                    : Colors.black54,
+                                    : Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ],
@@ -266,9 +266,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       hintText: 'Напишите сообщение...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none
                       ),
                       filled: true,
-                      fillColor: Colors.white,
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),

@@ -180,7 +180,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
               ElevatedButton(
                 onPressed: _createVacancy,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

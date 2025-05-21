@@ -135,88 +135,93 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                 ? Center(child: Text(_errorMessage!))
                 : _filteredVacancies.isEmpty
                 ? const Center(child: Text('Нет доступных вакансий'))
-                : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _filteredVacancies.length,
-              itemBuilder: (context, index) {
-                final vacancy = _filteredVacancies[index];
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(15.0),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          DateFormat.yMMMd('ru').format(vacancy.createdAt),
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          vacancy.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                : RefreshIndicator(
+                  onRefresh: () async {
+                    _loadVacancies();
+                  },
+                  child: ListView.builder(
+                                padding: const EdgeInsets.all(8.0),
+                                itemCount: _filteredVacancies.length,
+                                itemBuilder: (context, index) {
+                  final vacancy = _filteredVacancies[index];
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 5),
-                        Text(
-                          '${vacancy.salaryFrom ?? 'Не указано'} - ${vacancy.salaryTo ?? 'Не указано'} ₽ в месяц',
-                          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(CupertinoIcons.briefcase, color: Theme.of(context).colorScheme.primary, size: 18),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child:                         Text(
-                                vacancy.companyName ?? 'Не указано',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(15.0),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat.yMMMd('ru').format(vacancy.createdAt),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                vacancy.location ?? 'Местоположение не указано',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
+                          ),
+                          Text(
+                            vacancy.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          Text(
+                            '${vacancy.salaryFrom ?? 'Не указано'} - ${vacancy.salaryTo ?? 'Не указано'} ₽ в месяц',
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(CupertinoIcons.briefcase, color: Theme.of(context).colorScheme.primary, size: 18),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child:                         Text(
+                                  vacancy.companyName ?? 'Не указано',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(
+                                  vacancy.location ?? 'Местоположение не указано',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
+                      isThreeLine: true,
+                      subtitleTextStyle: const TextStyle(color: Colors.grey),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ApplicantVacancyDetailScreen(vacancyId: vacancy.id),
+                          ),
+                        );
+                      },
+                      horizontalTitleGap: 16.0,
                     ),
-                    trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
-                    isThreeLine: true,
-                    subtitleTextStyle: const TextStyle(color: Colors.grey),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ApplicantVacancyDetailScreen(vacancyId: vacancy.id),
-                        ),
-                      );
-                    },
-                    horizontalTitleGap: 16.0,
-                  ),
-                );
-              },
-            ),
+                  );
+                                },
+                              ),
+                ),
           ),
         ],
       ),
@@ -234,7 +239,7 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.blue : Colors.grey,
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

@@ -54,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _userName = userInfo['name'] ?? 'Не указано';
         _userEmail = userInfo['email'] ?? 'Не указано';
-        _userDate = DateTime.parse(userInfo['created_at'] as String) ?? DateTime.now();
+        _userDate = DateTime.parse(userInfo['created_at'] as String);
         _userRole = userInfo['role'] == 'applicant'
             ? 'Соискатель'
             : userInfo['role'] == 'company_owner'

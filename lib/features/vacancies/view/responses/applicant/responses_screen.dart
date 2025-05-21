@@ -32,20 +32,6 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
     super.initState();
     _loadResponses();
     _loadInvitations();
-    _startPolling();
-  }
-
-  void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      await Future.wait([
-        _loadResponses(),
-        _loadInvitations(),
-      ]);
-    });
   }
 
   Future<void> _loadResponses() async {
@@ -123,11 +109,6 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
       final chatId = response['id']?.toString(); // Assuming 'id' is the chat ID
 
       if (chatId != null && mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ChatDetailScreen(chatId: chatId),
-          ),
-        );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Приглашение принято и чат создан')),
         );
@@ -198,41 +179,46 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
               ? Center(child: Text(_errorMessageResponses!))
               : _responses.isEmpty
               ? const Center(child: Text('Нет откликов'))
-              : ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: _responses.length,
-            itemBuilder: (context, index) {
-              final response = _responses[index];
-              final vacancyTitle = response['item_title'] ?? 'Не указана';
-              final status = (response['status'] == 'accepted')
-                  ? 'принято'
-                  : (response['status'] == 'pending')
-                  ? 'ожидание'
-                  : 'отклонено';
-              final createdAt = response['created_at'] != null
-                  ? DateFormat.yMMMd('ru').format(DateTime.parse(response['created_at']))
-                  : 'Не указано';
-              return Card(
-                child: ListTile(
-                  minVerticalPadding: 15,
-                  leading: const Icon(Icons.mail),
-                  trailing: (status == 'принято') ? Icon(Icons.check_circle_rounded, color: Colors.green)  : (status == 'отклонено') ? Icon(Icons.close, color: Colors.red) : Icon(Icons.pending_outlined, color: Colors.orange),
-                  title: Text('Отклик ${index + 1}'),
-                  subtitle: Text(
-                      'Вакансия: $vacancyTitle\nСтатус: $status\nДата: $createdAt'),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ResponseDetailScreen(
-                          responseId: response['id'].toString(),
+              : RefreshIndicator(
+                onRefresh: () async {
+                  _loadResponses();
+                },
+                child: ListView.builder(
+                            padding: const EdgeInsets.all(8.0),
+                            itemCount: _responses.length,
+                            itemBuilder: (context, index) {
+                final response = _responses[index];
+                final vacancyTitle = response['item_title'] ?? 'Не указана';
+                final status = (response['status'] == 'accepted')
+                    ? 'принято'
+                    : (response['status'] == 'pending')
+                    ? 'ожидание'
+                    : 'отклонено';
+                final createdAt = response['created_at'] != null
+                    ? DateFormat.yMMMd('ru').format(DateTime.parse(response['created_at']))
+                    : 'Не указано';
+                return Card(
+                  child: ListTile(
+                    minVerticalPadding: 15,
+                    leading: const Icon(Icons.mail),
+                    trailing: (status == 'принято') ? Icon(Icons.check_circle_rounded, color: Colors.green)  : (status == 'отклонено') ? Icon(Icons.close, color: Colors.red) : Icon(Icons.pending_outlined, color: Colors.orange),
+                    title: Text('Отклик ${index + 1}'),
+                    subtitle: Text(
+                        'Вакансия: $vacancyTitle\nСтатус: $status\nДата: $createdAt'),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ResponseDetailScreen(
+                            responseId: response['id'].toString(),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
+                      );
+                    },
+                  ),
+                );
+                            },
+                          ),
+              ),
           // Invitations Tab
           _isLoadingInvitations
               ? const Center(child: CircularProgressIndicator())
@@ -240,117 +226,122 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
               ? Center(child: Text(_errorMessageInvitations!))
               : _invitations.isEmpty
               ? const Center(child: Text('Нет приглашений'))
-              : ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: _invitations.length,
-            itemBuilder: (context, index) {
-              final invitation = _invitations[index];
-              final vacancyTitle = invitation['vacancy_title'] ?? 'Не указана';
-              final employerName = invitation['employer_name'] ?? 'Не указан';
-              final status = invitation['status'];
-              final createdAt = invitation['created_at'] != null
-                  ? DateFormat.yMMMd('ru').format(DateTime.parse(invitation['created_at']))
-                  : 'Не указано';
-              final message = invitation['message'] ?? 'Сообщение отсутствует';
-              final vacancyId = invitation['vacancy_id']?.toString();
-              final companyOwnerId = invitation['employer_id']?.toString();
-              if (vacancyId == null || companyOwnerId == null) {
-                return const Card(
+              : RefreshIndicator(
+                onRefresh: () async {
+                  _loadInvitations();
+                },
+                child: ListView.builder(
+                            padding: const EdgeInsets.all(8.0),
+                            itemCount: _invitations.length,
+                            itemBuilder: (context, index) {
+                final invitation = _invitations[index];
+                final vacancyTitle = invitation['vacancy_title'] ?? 'Не указана';
+                final employerName = invitation['employer_name'] ?? 'Не указан';
+                final status = invitation['status'];
+                final createdAt = invitation['created_at'] != null
+                    ? DateFormat.yMMMd('ru').format(DateTime.parse(invitation['created_at']))
+                    : 'Не указано';
+                final message = invitation['message'] ?? 'Сообщение отсутствует';
+                final vacancyId = invitation['vacancy_id']?.toString();
+                final companyOwnerId = invitation['employer_id']?.toString();
+                if (vacancyId == null || companyOwnerId == null) {
+                  return const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Ошибка: vacancy_id или company_owner_id отсутствует'),
+                    ),
+                  );
+                }
+
+                return Card(
                   child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text('Ошибка: vacancy_id или company_owner_id отсутствует'),
-                  ),
-                );
-              }
-
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Приглашение от: $employerName',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Вакансия: $vacancyTitle'),
-                      const SizedBox(height: 4),
-                      Text('Дата: $createdAt'),
-                      const SizedBox(height: 8),
-                      Text('Сообщение: $message'),
-                      const SizedBox(height: 16),
-                      if (status == 'pending')
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _acceptInvitation(vacancyId, invitation['id'].toString(), companyOwnerId),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              ),
-                              child: const Text('Принять'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => _declineInvitation(vacancyId, invitation['id'].toString()),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              ),
-                              child: const Text('Отказаться'),
-                            ),
-                          ],
-                        )
-                      else if (status == 'accepted')
-                        Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Приглашение от: $employerName',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Вакансия: $vacancyTitle'),
+                        const SizedBox(height: 4),
+                        Text('Дата: $createdAt'),
+                        const SizedBox(height: 8),
+                        Text('Сообщение: $message'),
+                        const SizedBox(height: 16),
+                        if (status == 'pending')
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Text(
-                                'Принято ',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                              ElevatedButton(
+                                onPressed: () => _acceptInvitation(vacancyId, invitation['id'].toString(), companyOwnerId),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 ),
+                                child: const Text('Принять'),
                               ),
-                              Icon(Icons.check_circle_rounded, color: Colors.green)
-
+                              ElevatedButton(
+                                onPressed: () => _declineInvitation(vacancyId, invitation['id'].toString()),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                ),
+                                child: const Text('Отказаться'),
+                              ),
                             ],
-                          ),
-                        )
-                      else if (status == 'declined')
+                          )
+                        else if (status == 'accepted')
                           Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Отклонено',
+                                  'Принято ',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.red,
+                                    color: Colors.green,
                                   ),
                                 ),
-                                Icon(Icons.close, color: Colors.red)
+                                Icon(Icons.check_circle_rounded, color: Colors.green)
+
                               ],
                             ),
-                          ),
-                    ],
+                          )
+                        else if (status == 'declined')
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Отклонено',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  Icon(Icons.close, color: Colors.red)
+                                ],
+                              ),
+                            ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+                            },
+                          ),
+              ),
         ],
       ),
     );

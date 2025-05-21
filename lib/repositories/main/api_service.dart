@@ -441,11 +441,13 @@ class ApiService {
 
     return Future.wait(data.map((c) async {
       final opponentId = c['applicant_id'] == userId ? c['company_owner_id'] : c['applicant_id'];
+      final vacancyId = c['vacancy_id'];
       final opponentProfile = await getUserProfileById(opponentId!);
+      final vacancy = await getVacancyById(vacancyId);
       return {
         'id': c['id'],
         'opponentName': opponentProfile['name'],
-        'contextTitle': c['context_title'],
+        'vacancyName': vacancy.title,
         'createdAt': c['created_at'],
       };
     }));

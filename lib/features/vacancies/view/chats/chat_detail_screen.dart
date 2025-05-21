@@ -6,6 +6,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../repositories/main/model/vacancy.dart';
+
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
 
@@ -21,6 +23,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String? _opponentName;
+  String? _vacancyName;
   String? _userId;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -107,6 +110,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       debugPrint('Found chat: $chat');
       setState(() {
         _opponentName = chat['opponentName'] ?? 'Неизвестный';
+        _vacancyName = chat['vacancyName'];
       });
     } catch (e) {
       debugPrint('Error loading opponent name: $e');
@@ -121,7 +125,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
-    try {
+     try {
       final messages = await _apiService.loadMessages(widget.chatId);
       final sortedMessages = messages.toList()
         ..sort((a, b) => DateTime.parse(a['createdAt']).compareTo(DateTime.parse(b['createdAt'])));
@@ -176,7 +180,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_opponentName != null ? 'Чат с $_opponentName' : 'Чат ${widget.chatId}'),
+        title: Text('Чат с ${_opponentName ?? ''}'),
+        bottom:
+        PreferredSize(
+            preferredSize: Size(10, 20),
+            child: Text('Вакансия: ${_vacancyName ?? ''}')),
       ),
       body: Column(
         children: [

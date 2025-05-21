@@ -123,101 +123,106 @@ class _ResumesScreenState extends State<ResumesScreen> {
                   ? Center(child: Text(_errorMessage!))
                   : _filteredResumes.isEmpty
                   ? const Center(child: Text('Нет доступных резюме'))
-                  : ListView.builder(
-                padding: const EdgeInsets.all(8.0),
-                itemCount: _filteredResumes.length,
-                itemBuilder: (context, index) {
-                  final resume = _filteredResumes[index];
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(15.0),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat.yMMMd('ru').format(resume.createdAt),
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            resume.specializationName ?? 'Не указана',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                  : RefreshIndicator(
+                    onRefresh: () async {
+                      _loadResumes();
+                    },
+                    child: ListView.builder(
+                                    padding: const EdgeInsets.all(8.0),
+                                    itemCount: _filteredResumes.length,
+                                    itemBuilder: (context, index) {
+                    final resume = _filteredResumes[index];
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary, size: 18),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  'Имя: ${resume.applicantName ?? 'Не указано'}',
-                                  style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                                ),
+                      elevation: 3,
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(15.0),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DateFormat.yMMMd('ru').format(resume.createdAt),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Icon(Icons.star_border, color: Theme.of(context).colorScheme.primary, size: 18),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  "Уровень опыта: ${resume.experienceLevel ?? 'Не указан'}",
-                                  style: const TextStyle(color: Colors.grey),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                            ),
+                            Text(
+                              resume.specializationName ?? 'Не указана',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  resume.location ?? 'Не указано',
-                                  style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary, size: 18),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    'Имя: ${resume.applicantName ?? 'Не указано'}',
+                                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Icon(Icons.star_border, color: Theme.of(context).colorScheme.primary, size: 18),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    "Уровень опыта: ${resume.experienceLevel ?? 'Не указан'}",
+                                    style: const TextStyle(color: Colors.grey),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_outlined, color: Theme.of(context).colorScheme.primary, size: 18),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    resume.location ?? 'Не указано',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
+                        isThreeLine: true,
+                        subtitleTextStyle: const TextStyle(color: Colors.grey),
+                        onTap: () async {
+                          final result = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ResumeDetailScreen(resumeId: resume.id),
+                            ),
+                          );
+                          if (result == true) {
+                            await _loadResumes();
+                          }
+                        },
+                        horizontalTitleGap: 16.0,
                       ),
-                      trailing: const Icon(Icons.arrow_forward, color: Colors.grey),
-                      isThreeLine: true,
-                      subtitleTextStyle: const TextStyle(color: Colors.grey),
-                      onTap: () async {
-                        final result = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => ResumeDetailScreen(resumeId: resume.id),
-                          ),
-                        );
-                        if (result == true) {
-                          await _loadResumes();
-                        }
-                      },
-                      horizontalTitleGap: 16.0,
-                    ),
-                  );
-                },
-              ),
+                    );
+                                    },
+                                  ),
+                  ),
             ),
           ],
         ),

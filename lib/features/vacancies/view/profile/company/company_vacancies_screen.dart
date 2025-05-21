@@ -90,12 +90,6 @@ class _CompanyVacanciesScreenState extends State<CompanyVacanciesScreen> {
               ),
             ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {},
-            ),
-          ],
         ),
         body: Column(
           children: [

@@ -209,7 +209,7 @@ class _ApplicantVacancyDetailScreenState extends State<ApplicantVacancyDetailScr
               ],
             ),
             const SizedBox(height: 16),
-            _hasResponded
+            _hasResponded && _responseStatus != 'cancelled'
                 ? _responseStatus == 'pending'
                 ? Column(
               children: [

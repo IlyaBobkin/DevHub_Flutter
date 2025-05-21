@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart'; // Для форматирования даты
+import 'package:intl/intl.dart';
 import 'package:my_new_project/repositories/main/api_service.dart';
 
 class ResponseDetailScreen extends StatefulWidget {
@@ -17,6 +17,7 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
   Map<String, dynamic>? _response;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _responseStatus; // Для хранения статуса отклика
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
       );
       setState(() {
         _response = response;
+        _responseStatus = response['status']; // Сохраняем статус
         _isLoading = false;
       });
     } catch (e) {
@@ -47,6 +49,30 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
         _errorMessage = 'Ошибка загрузки деталей отклика: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _cancelResponse() async {
+    if (_response == null || _response!['item_id'] == null || _responseStatus != 'pending') return;
+
+    try {
+      await _apiService.updateVacancyResponseStatus(
+        _response!['item_id'].toString(),
+        widget.responseId,
+        'cancelled',
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Отклик успешно отменен')),
+      );
+      setState(() {
+        _responseStatus = 'cancelled'; // Обновляем статус
+        _loadResponse();
+      });
+    } catch (e) {
+      debugPrint('Error cancelling response: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка отмены отклика: $e')),
+      );
     }
   }
 
@@ -82,15 +108,47 @@ class _ResponseDetailScreenState extends State<ResponseDetailScreen> {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Статус: ${_response!['status'] == 'accepted' ? 'принято' : _response!['status'] == 'pending' ? 'ожидание' : 'отклонено'}',
-              style: const TextStyle(fontSize: 18),
+            Row(
+              children: [
+                Text(
+                  'Статус: ${_response!['status'] == 'accepted' ? 'принято' : _response!['status'] == 'pending' ? 'ожидание' : _response!['status'] == 'cancelled' ? 'отменен' : 'отклонено'}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                SizedBox(width: 5),
+                (_response!['status'] == 'accepted')
+                    ? Icon(Icons.check_circle_rounded, color: Colors.green)
+                    : (_response!['status'] == 'declined')
+                    ? Icon(Icons.close, color: Colors.red)
+                    : (_response!['status'] == 'cancelled')
+                    ? Icon(Icons.settings_backup_restore, color: Colors.red)
+                    : Icon(Icons.pending_outlined, color: Colors.orange),
+              ],
             ),
             const SizedBox(height: 16),
             Text(
               'Комментарий: ${_response!['message'] ?? 'Отсутствует'}',
               style: const TextStyle(fontSize: 16),
             ),
+            const SizedBox(height: 16),
+            if (_responseStatus == 'pending')
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _cancelResponse,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 10,
+                  ),
+                  child: const Text(
+                    'Отменить отклик',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

@@ -193,6 +193,8 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
                     ? 'принято'
                     : (response['status'] == 'pending')
                     ? 'ожидание'
+                    : (response['status'] == 'cancelled')
+                    ? 'отменен'
                     : 'отклонено';
                 final createdAt = response['created_at'] != null
                     ? DateFormat.yMMMd('ru').format(DateTime.parse(response['created_at']))
@@ -201,7 +203,7 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
                   child: ListTile(
                     minVerticalPadding: 15,
                     leading: const Icon(Icons.mail),
-                    trailing: (status == 'принято') ? Icon(Icons.check_circle_rounded, color: Colors.green)  : (status == 'отклонено') ? Icon(Icons.close, color: Colors.red) : Icon(Icons.pending_outlined, color: Colors.orange),
+                    trailing: (status == 'принято') ? Icon(Icons.check_circle_rounded, color: Colors.green)  : (status == 'отклонено') ? Icon(Icons.close, color: Colors.red) : (status == 'отменен') ? Icon(Icons.settings_backup_restore, color: Colors.red) : Icon(Icons.pending_outlined, color: Colors.orange),
                     title: Text('Отклик ${index + 1}'),
                     subtitle: Text(
                         'Вакансия: $vacancyTitle\nСтатус: $status\nДата: $createdAt'),
@@ -212,7 +214,7 @@ class _ResponsesScreenState extends State<ResponsesScreen> with RouteAware, Sing
                             responseId: response['id'].toString(),
                           ),
                         ),
-                      );
+                      ).whenComplete(_loadResponses);
                     },
                   ),
                 );

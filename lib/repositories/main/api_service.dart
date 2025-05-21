@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/vacancy.dart';
 
 class ApiService {
-/*  static const String _apiAddress = 'http://10.0.2.2:8080';
-  static const String _keycloakAddress = 'http://10.0.2.2:8086';  */
   static const String _apiAddress = 'http://192.168.1.157:8080';
   static const String _keycloakAddress = 'http://192.168.1.157:8086';
   final Dio _dio = Dio();
@@ -96,7 +93,7 @@ class ApiService {
       if (companyDescription != null) 'companyDescription': companyDescription,
     };
 
-    debugPrint('Register data: $data'); // Логируем данные перед отправкой
+    debugPrint('Register data: $data');
     final response = await apiFetch('/user/register', method: 'POST', data: data);
     if (response.statusCode != 200 && response.statusCode != 201) {
       debugPrint('Register response error: ${response.statusCode} - ${response.data}');
@@ -354,7 +351,6 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   }
 
-// Получение резюме пользователя
   Future<Map<String, dynamic>?> getMyResume() async {
     try {
       final response = await apiFetch('/resumes/my', method: 'GET', requiresAuth: true);
@@ -365,10 +361,10 @@ class ApiService {
     } catch (e) {
       if (e.toString().contains('404')) {
         debugPrint('Резюме не найдено (404), возвращаем null');
-        return null; // Если резюме нет, возвращаем null
+        return null;
       }
       debugPrint('Ошибка получения резюме: $e');
-      throw e; // Пробрасываем другие ошибки
+      throw e;
     }
   }
 
@@ -510,112 +506,173 @@ class ApiService {
     }
     return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
   }
-}
 
-Future<void> initializeApp() async {
-  final prefs = await SharedPreferences.getInstance();
-  final accessToken = prefs.getString('access_token');
-  final refreshToken = prefs.getString('refresh_token');
-
-  if (accessToken != null && refreshToken != null) {
-    try {
-      // Проверка токена и загрузка данных пользователя
-      final userInfo = await fetchUserInfo(accessToken);
-      final profile = await fetchProfile(accessToken);
-
-      await prefs.setString('user_id', userInfo['sub'] ?? '');
-      await prefs.setString('name', userInfo['name'] ?? profile['name'] ?? '');
-      await prefs.setString('email', userInfo['email'] ?? '');
-      final roles = userInfo['realm_access']?['roles'] as List<String>?;
-      String role = '';
-      if (roles != null) {
-        if (roles.contains('company_owner')) {
-          role = 'company_owner';
-        } else if (roles.contains('applicant')) {
-          role = 'applicant';
-        }
-      }
-      await prefs.setString('role', role);
-      await prefs.setString('created_at', profile['created_at'] ?? DateTime.now().toIso8601String());
-      await prefs.setString('companyId', profile['companyId'] ?? '');
-      await prefs.setString('companyName', profile['companyName'] ?? '');
-      await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
-
-      // Периодическое обновление токена (например, каждые 10 минут, чтобы не превышать лимиты)
-      Future<void>.delayed(const Duration(minutes: 10), () async {
-        while (true) {
-          await Future.delayed(const Duration(minutes: 10));
-          try {
-            final newTokens = await refreshTokens(refreshToken);
-            final newAccessToken = newTokens['access_token'] as String?;
-            final newRefreshToken = newTokens['refresh_token'] as String?;
-
-            if (newAccessToken != null && newRefreshToken != null) {
-              await prefs.setString('access_token', newAccessToken);
-              await prefs.setString('refresh_token', newRefreshToken);
-              print('Token refreshed successfully: $newAccessToken');
-            } else {
-              throw Exception('Failed to refresh token: No new tokens received.');
-            }
-          } catch (e) {
-            print('Failed to refresh token: $e');
-            await prefs.clear();
-            break;
-          }
-        }
-      });
-    } catch (e) {
-      print('Initialization failed: $e');
-      await prefs.clear();
+  // Работа с FCM-токеном
+  Future<void> saveFcmToken(String fcmToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('user_id');
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
+    final data = {'fcm_token': fcmToken};
+    final response = await apiFetch('/fcm-token', method: 'POST', data: data, requiresAuth: true);
+    if (response.statusCode != 200) {
+      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка сохранения FCM-токена');
     }
   }
-}
 
-Future<Map<String, dynamic>> refreshTokens(String refreshToken) async {
-  final response = await http.post(
-    //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/token'),
-    Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/token'),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: {
-      'grant_type': 'refresh_token',
-      'refresh_token': refreshToken,
-      'client_id': 'frontend',
-      'client_secret': 'QMtjD85G7WZ6ZWE5SdIV6MaA3393Qrgp', // Твой Client Secret
-    },
-  );
-
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else {
-    throw Exception('Failed to refresh token: ${response.statusCode} - ${response.body}');
+  // Работа с уведомлениями
+  Future<List<Map<String, dynamic>>> getUserNotifications() async {
+    final response = await apiFetch('/notifications', method: 'GET', requiresAuth: true);
+    if (response.statusCode != 200) {
+      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка загрузки уведомлений');
+    }
+    return List<Map<String, dynamic>>.from(response.data);
   }
-}
 
-Future<Map<String, dynamic>> fetchUserInfo(String token) async {
-  final response = await http.get(
-    Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
-    //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
-  if (response.statusCode == 200) {
-    return Map<String, dynamic>.from(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to fetch user info: ${response.statusCode} - ${response.body}');
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final response = await apiFetch('/notifications/$notificationId/read', method: 'POST', requiresAuth: true);
+    if (response.statusCode != 200) {
+      throw Exception((response.data as Map<String, dynamic>)['error'] ?? 'Ошибка пометки уведомления как прочитанного');
+    }
   }
-}
 
-Future<Map<String, dynamic>> fetchProfile(String token) async {
-  final response = await http.get(
-/*    Uri.parse('http://10.0.2.2:8080/user/profile'),*/
-    Uri.parse('http://192.168.1.157:8080/user/profile'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
-  if (response.statusCode == 200) {
-    return Map<String, dynamic>.from(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to fetch profile: ${response.statusCode} - ${response.body}');
+  Future<void> initializeApp(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    var accessToken = prefs.getString('access_token');
+    final refreshToken = prefs.getString('refresh_token');
+
+    if (accessToken != null && refreshToken != null) {
+      try {
+        // Проверка токена и загрузка данных пользователя
+        if (await _isTokenExpired(accessToken)) {
+          try {
+            accessToken = await _refreshAccessToken(refreshToken, prefs);
+          } catch (e) {
+            debugPrint('Refresh token failed: $e. Redirecting to login.');
+            await prefs.clear();
+            Navigator.pushReplacementNamed(context, '/login');
+            return;
+          }
+        }
+
+        final userInfo = await fetchUserInfo(accessToken);
+        final profile = await fetchProfile(accessToken);
+
+        await prefs.setString('user_id', userInfo['sub'] ?? '');
+        await prefs.setString('name', userInfo['name'] ?? profile['name'] ?? '');
+        await prefs.setString('email', userInfo['email'] ?? '');
+        final roles = userInfo['realm_access']?['roles'] as List<String>?;
+        String role = '';
+        if (roles != null) {
+          if (roles.contains('company_owner')) {
+            role = 'company_owner';
+          } else if (roles.contains('applicant')) {
+            role = 'applicant';
+          }
+        }
+        await prefs.setString('role', role);
+        await prefs.setString('created_at', profile['created_at'] ?? DateTime.now().toIso8601String());
+        await prefs.setString('companyId', profile['companyId'] ?? '');
+        await prefs.setString('companyName', profile['companyName'] ?? '');
+        await prefs.setString('companyDescription', profile['companyDescription'] ?? '');
+
+        // Периодическое обновление токена
+        _startTokenRefreshLoop(prefs, refreshToken, context);
+      } catch (e) {
+        debugPrint('Initialization failed: $e');
+        await prefs.clear();
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } else {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
+// Проверка истечения токена
+  Future<bool> _isTokenExpired(String token) async {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))));
+      final expiry = payload['exp'] as int?;
+      if (expiry == null) return true;
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return expiry < now;
+    } catch (e) {
+      debugPrint('Error checking token expiry: $e');
+      return true;
+    }
+  }
+
+// Обновление токена
+  Future<String> _refreshAccessToken(String refreshToken, SharedPreferences prefs) async {
+    final response = await _dio.post(
+      '$_keycloakAddress/realms/hh_realm/protocol/openid-connect/token',
+      data: {
+        'grant_type': 'refresh_token',
+        'refresh_token': refreshToken,
+        'client_id': 'frontend',
+        'client_secret': 'QMtjD85G7WZ6ZWE5SdIV6MaA3393Qrgp',
+      },
+      options: Options(contentType: 'application/x-www-form-urlencoded'),
+    );
+    if (response.statusCode == 200) {
+      final tokenData = response.data as Map<String, dynamic>;
+      final newAccessToken = tokenData['access_token'] as String?;
+      final newRefreshToken = tokenData['refresh_token'] as String?;
+      if (newAccessToken != null && newRefreshToken != null) {
+        await prefs.setString('access_token', newAccessToken);
+        await prefs.setString('refresh_token', newRefreshToken);
+        debugPrint('Token refreshed successfully: $newAccessToken');
+        return newAccessToken;
+      }
+      throw Exception('No new tokens received');
+    } else {
+      throw Exception('Failed to refresh token: ${response.statusCode} - ${response.data}');
+    }
+  }
+
+// Периодическое обновление токена
+  void _startTokenRefreshLoop(SharedPreferences prefs, String refreshToken, BuildContext context) {
+    Future<void>.delayed(const Duration(minutes: 5), () async {
+      while (true) {
+        await Future.delayed(const Duration(minutes: 5));
+        try {
+          final accessToken = await _refreshAccessToken(refreshToken, prefs);
+          debugPrint('Token refreshed periodically: $accessToken');
+        } catch (e) {
+          debugPrint('Periodic token refresh failed: $e');
+          await prefs.clear();
+          Navigator.pushReplacementNamed(context, '/login');
+          break;
+        }
+      }
+    });
+  }
+
+  Future<Map<String, dynamic>> fetchUserInfo(String token) async {
+    final response = await _dio.get(
+      '$_keycloakAddress/realms/hh_realm/protocol/openid-connect/userinfo',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode == 200) {
+      return response.data as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to fetch user info: ${response.statusCode} - ${response.data}');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchProfile(String token) async {
+    final response = await _dio.get(
+      '$_apiAddress/user/profile',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode == 200) {
+      return response.data as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to fetch profile: ${response.statusCode} - ${response.data}');
+    }
   }
 }
 

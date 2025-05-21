@@ -36,7 +36,7 @@ class _HelloScreenState extends State<HelloScreen> {
                 imageFilter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                 child: Image.asset(
                   "assets/images/chel.png",
-                  width: 400,
+                  width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -48,7 +48,7 @@ class _HelloScreenState extends State<HelloScreen> {
                   'Хочешь попасть\nв сферу IT?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 32, // Увеличен для акцента
+                    fontSize: 25, // Увеличен для акцента
                     fontWeight: FontWeight.w900, // Более жирный шрифт для заголовка
                     letterSpacing: 1.2, // Лёгкое расширение символов
                     shadows: [
@@ -67,7 +67,7 @@ class _HelloScreenState extends State<HelloScreen> {
                     'Поиск работы мечты в сфере IT стал быстрее и проще с DevHub',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 18, // Увеличен для читаемости
+                      fontSize: 16, // Увеличен для читаемости
                       fontWeight: FontWeight.w300, // Средняя жирность для субтитра
                       color: Colors.grey,
                       height: 1.5, // Межстрочный интервал для удобства чтения

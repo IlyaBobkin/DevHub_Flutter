@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:my_new_project/features/vacancies/view/profile/company/company_vacancies_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
 import '../../../../job_app.dart';
+import '../../../../repositories/main/api_service.dart';
 import '../../../authorization/view/login_screen.dart';
 import 'applicant/actions/create_resume_screen.dart';
 import 'applicant/actions/edit_resume_screen.dart';
+import 'company/company_vacancies_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../repositories/main/api_service.dart';
+import '../../../../../repositories/main/model/vacancy.dart';
 import 'actions/edit_vacancy_screen.dart';
 
 class CompanyVacancyDetailScreen extends StatefulWidget {

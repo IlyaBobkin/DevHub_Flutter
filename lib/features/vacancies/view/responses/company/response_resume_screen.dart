@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/resume.dart';
+
+import '../../../../../repositories/main/api_service.dart';
+import '../../../../../repositories/main/model/resume.dart';
 
 class ResponseResumeScreen extends StatefulWidget {
   final String resumeId;

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
+
+import '../../../../../../repositories/main/api_service.dart';
 
 class CreateResumeScreen extends StatefulWidget {
   const CreateResumeScreen({super.key});
@@ -92,8 +93,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Создать резюме', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        title: const Text('Создать резюме'),
         elevation: 4,
       ),
       body: Padding(
@@ -167,7 +167,7 @@ class _CreateResumeScreenState extends State<CreateResumeScreen> {
               ElevatedButton(
                 onPressed: _createResume,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

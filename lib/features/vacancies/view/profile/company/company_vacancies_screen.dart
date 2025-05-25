@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
+import '../../../../../repositories/main/api_service.dart';
+import '../../../../../repositories/main/model/vacancy.dart';
 import '../../../../authorization/view/login_screen.dart';
 import 'company_vacancies_detail_screen.dart';
 import 'actions/create_vacancy_screen.dart';

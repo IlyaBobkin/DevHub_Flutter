@@ -30,6 +30,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<String> getAdminToken() async {
     final response = await http.post(
       Uri.parse('http://192.168.1.157:8086/realms/master/protocol/openid-connect/token'),
+      //Uri.parse('http://31.207.77.35:8086/realms/master/protocol/openid-connect/token'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -52,6 +53,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<String> getUserId(String adminToken, String email) async {
     final response = await http.get(
       Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/users?email=$email'),
+      //Uri.parse('http://31.207.77.35:8086/admin/realms/hh_realm/users?email=$email'),
       headers: {
         'Authorization': 'Bearer $adminToken',
       },
@@ -72,6 +74,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<Map<String, dynamic>> getRoleByName(String adminToken, String roleName) async {
     final response = await http.get(
       Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/roles/$roleName'),
+      //Uri.parse('http://31.207.77.35:8086/admin/realms/hh_realm/roles/$roleName'),
       headers: {
         'Authorization': 'Bearer $adminToken',
       },
@@ -95,6 +98,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     final response = await http.post(
       Uri.parse('http://192.168.1.157:8086/admin/realms/hh_realm/users/$userId/role-mappings/realm'),
+      //Uri.parse('http://31.207.77.35:8086/admin/realms/hh_realm/users/$userId/role-mappings/realm'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $adminToken',
@@ -126,6 +130,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         final response = await http.post(
           Uri.parse('http://192.168.1.157:8080/user/register'),
+          //Uri.parse('http://31.207.77.35:8080/user/register'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(data),
         );
@@ -151,6 +156,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/token'),
+        //Uri.parse('http://31.207.77.35:8086/realms/hh_realm/protocol/openid-connect/token'),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -215,6 +221,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<Map<String, dynamic>> fetchUserInfo(String token) async {
     final response = await http.get(
       Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      //Uri.parse('http://31.207.77.35:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
@@ -227,6 +234,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<Map<String, dynamic>> fetchProfile(String token) async {
     final response = await http.get(
       Uri.parse('http://192.168.1.157:8080/user/profile'),
+      //Uri.parse('http://31.207.77.35:8080/user/profile'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {

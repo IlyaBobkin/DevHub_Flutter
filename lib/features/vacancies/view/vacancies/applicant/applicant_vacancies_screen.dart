@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_detail_screen.dart';
 import '../../../../../repositories/main/model/vacancy.dart';
 import '../../../../../repositories/main/repository.dart';
+import 'applicant_vacancies_detail_screen.dart';
 
 class ApplicantVacanciesScreen extends StatefulWidget {
   const ApplicantVacanciesScreen({super.key});
@@ -175,7 +175,7 @@ class _ApplicantVacanciesScreenState extends State<ApplicantVacanciesScreen> {
                         children: [
                           const SizedBox(height: 5),
                           Text(
-                            '${vacancy.salaryFrom ?? 'Не указано'} - ${vacancy.salaryTo ?? 'Не указано'} ₽ в месяц',
+                            '${vacancy.salaryFrom?.replaceAll('.00', '') ?? 'Не указано'} - ${vacancy.salaryTo?.replaceAll('.00', '') ?? 'Не указано'} ₽ в месяц',
                             style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
                           ),
                           const SizedBox(height: 5),

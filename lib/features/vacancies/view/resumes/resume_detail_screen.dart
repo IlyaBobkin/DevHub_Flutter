@@ -3,8 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/resume.dart';
+
+import '../../../../repositories/main/api_service.dart';
+import '../../../../repositories/main/model/resume.dart';
 
 class ResumeDetailScreen extends StatefulWidget {
   final String resumeId;

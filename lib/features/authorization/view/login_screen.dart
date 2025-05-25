@@ -590,10 +590,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  List<bool> _roleSelection = [true, false];
+  final List<bool> _roleSelection = [true, false];
   bool _obscured = true;
-  FocusNode _mailNode = FocusNode();
-  FocusNode _passNode = FocusNode();
+  final FocusNode _mailNode = FocusNode();
+  final FocusNode _passNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -609,13 +609,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
+        final prefs = await SharedPreferences.getInstance();
+
         final result = await ApiService().login(
           email: _emailController.text,
           password: _passwordController.text,
           role: _roleSelection[0] ? 'applicant' : 'company_owner',
         );
 
-        final prefs = await SharedPreferences.getInstance();
+        //final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', result['access_token']);
         await prefs.setString('refresh_token', result['refresh_token']);
 
@@ -643,6 +645,8 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         print('Login error: $e');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка авторизации: $e')));
+        final prefs = await SharedPreferences.getInstance();
+        prefs.clear();
       } finally {
         setState(() => _isLoading = false);
       }
@@ -653,6 +657,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final response = await http.get(
       //Uri.parse('http://10.0.2.2:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
       Uri.parse('http://192.168.1.157:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
+      //Uri.parse('http://31.207.77.35:8086/realms/hh_realm/protocol/openid-connect/userinfo'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {
@@ -666,6 +671,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final response = await http.get(
       //Uri.parse('http://10.0.2.2:8080/user/profile'),
       Uri.parse('http://192.168.1.157:8080/user/profile'),
+      //Uri.parse('http://31.207.77.35:8080/user/profile'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode == 200) {

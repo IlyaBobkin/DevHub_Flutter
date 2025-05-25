@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../repositories/main/api_service.dart';
 import '../../../../repositories/main/model/vacancy.dart';
 
 class ChatDetailScreen extends StatefulWidget {

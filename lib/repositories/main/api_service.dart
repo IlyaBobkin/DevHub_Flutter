@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,9 @@ import 'model/vacancy.dart';
 class ApiService {
   static const String _apiAddress = 'http://192.168.1.157:8080';
   static const String _keycloakAddress = 'http://192.168.1.157:8086';
+  //static const String _apiAddress = 'http://31.207.77.35:8080';
+  //static const String _keycloakAddress = 'http://31.207.77.35:8086';
+
   final Dio _dio = Dio();
 
   Future<Response> apiFetch(String path, {required String method, dynamic data, bool requiresAuth = false}) async {
@@ -537,7 +541,7 @@ class ApiService {
     }
   }
 
-  Future<void> initializeApp(BuildContext context) async {
+/*  Future<void> initializeApp(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     var accessToken = prefs.getString('access_token');
     final refreshToken = prefs.getString('refresh_token');
@@ -545,9 +549,9 @@ class ApiService {
     if (accessToken != null && refreshToken != null) {
       try {
         // Проверка токена и загрузка данных пользователя
-        if (await _isTokenExpired(accessToken)) {
+        if (await isTokenExpired(accessToken)) {
           try {
-            accessToken = await _refreshAccessToken(refreshToken, prefs);
+            accessToken = await refreshAccessToken(refreshToken, prefs);
           } catch (e) {
             debugPrint('Refresh token failed: $e. Redirecting to login.');
             await prefs.clear();
@@ -587,10 +591,10 @@ class ApiService {
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }
-  }
+  }*/
 
 // Проверка истечения токена
-  Future<bool> _isTokenExpired(String token) async {
+  Future<bool> isTokenExpired(String token) async {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
@@ -606,7 +610,7 @@ class ApiService {
   }
 
 // Обновление токена
-  Future<String> _refreshAccessToken(String refreshToken, SharedPreferences prefs) async {
+  Future<String> refreshAccessToken(String refreshToken, SharedPreferences prefs) async {
     final response = await _dio.post(
       '$_keycloakAddress/realms/hh_realm/protocol/openid-connect/token',
       data: {
@@ -633,13 +637,13 @@ class ApiService {
     }
   }
 
-// Периодическое обновление токена
+/*// Периодическое обновление токена
   void _startTokenRefreshLoop(SharedPreferences prefs, String refreshToken, BuildContext context) {
     Future<void>.delayed(const Duration(minutes: 5), () async {
       while (true) {
         await Future.delayed(const Duration(minutes: 5));
         try {
-          final accessToken = await _refreshAccessToken(refreshToken, prefs);
+          final accessToken = await refreshAccessToken(refreshToken, prefs);
           debugPrint('Token refreshed periodically: $accessToken');
         } catch (e) {
           debugPrint('Periodic token refresh failed: $e');
@@ -649,7 +653,7 @@ class ApiService {
         }
       }
     });
-  }
+  }*/
 
   Future<Map<String, dynamic>> fetchUserInfo(String token) async {
     final response = await _dio.get(
@@ -674,5 +678,182 @@ class ApiService {
       throw Exception('Failed to fetch profile: ${response.statusCode} - ${response.data}');
     }
   }
+
+
+
+/*  void registerUsers() async {
+    final api = ApiService();
+    final prefs = await SharedPreferences.getInstance();
+    final random = Random();
+
+    // Определение уровней опыта, местоположений и специализаций
+    final experienceLevels = ['junior', 'middle', 'senior'];
+    final locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Новосибирск', 'Екатеринбург', 'Воронеж', 'Нижний Новгород', 'Ростов-на-Дону'];
+
+    // Получение специализаций из API
+    final specializations = await api.getSpecializations();
+    if (specializations.isEmpty) {
+      print('Нет доступных специализаций');
+      return;
+    }
+
+    // Функции для получения случайных данных
+    String getRandomExperience() => experienceLevels[random.nextInt(experienceLevels.length)];
+    String getRandomLocation() => locations[random.nextInt(locations.length)];
+
+    // Данные работодателей с привязкой к специализациям
+    final employers = [
+      {
+        'name': 'ООО ТехСофт',
+        'email': 'hr@techsoft.ru',
+        'specializationId': '11933bc1-da4f-4703-80b4-11df98341c32', // Mobile Developer (iOS/Android)
+        'vacancy': 'Мобильный разработчик Flutter',
+        'desc': 'Мы ищем опытного мобильного разработчика Flutter для работы над инновационным приложением для электронной коммерции. Проект включает разработку сложных UI/UX, интеграцию с REST API, Firebase и Stripe для платежей. Вы будете работать в команде из 15 разработчиков, участвовать в проектировании архитектуры и внедрении CI/CD. Мы предлагаем гибкий график, удаленную работу и бонусы за успешные релизы.',
+        'salaryFrom': 130000,
+        'salaryTo': 160000,
+      },
+      {
+        'name': 'АО ВебПро',
+        'email': 'jobs@webpro.ru',
+        'specializationId': '16011ab0-c524-4399-b947-ac5bb7a6886a', // Frontend Developer
+        'vacancy': 'Frontend Developer (React)',
+        'desc': 'Приглашаем Frontend Developer с опытом работы в React и Vue для разработки современных интерфейсов. Вы будете работать над проектами с миллионами пользователей, включая локализацию на 10 языков и интеграцию с GraphQL. Мы используем современный стек технологий (TypeScript, Webpack, Redux), предоставляем обучение и участие в международных конференциях. Гибкий график и офис в центре города.',
+        'salaryFrom': 150000,
+        'salaryTo': 180000,
+      },
+      {
+        'name': 'ООО ИнфоБит',
+        'email': 'hr@infobit.ru',
+        'specializationId': '2a9a91e8-2321-45f1-82b8-8d13a8d69826', // Automation QA Engineer
+        'vacancy': 'Automation QA Engineer',
+        'desc': 'Ищем Automation QA Engineer для покрытия автотестами API и UI наших проектов. Вы будете работать с Selenium, Appium и Java, разрабатывать тест-кейсы и интегрировать их в CI/CD пайплайн. Проект включает тестирование Flutter-приложений и веб-сервисов с миллионами пользователей. Мы предлагаем обучение новым инструментам, комфортный офис и возможность карьерного роста.',
+        'salaryFrom': 110000,
+        'salaryTo': 140000,
+      },
+      {
+        'name': 'Digital Solutions',
+        'email': 'careers@digisol.ru',
+        'specializationId': '844fe14d-66d9-41c1-8752-a8c6186ce84a', // UI/UX Designer
+        'vacancy': 'UI/UX Designer',
+        'desc': 'Приглашаем UI/UX Designer для работы над дизайном мобильных и веб-приложений с глобальным охватом. Вы будете проводить исследования пользователей, создавать прототипы в Figma и тесно сотрудничать с разработчиками Flutter. Проект включает A/B тестирование и внедрение передовых стандартов UX. Мы предлагаем удаленную работу, доступ к премиум-инструментам и участие в международных проектах.',
+        'salaryFrom': 145000,
+        'salaryTo': 175000,
+      },
+      {
+        'name': 'SecureTech',
+        'email': 'hr@securetech.ru',
+        'specializationId': '0850d43e-5716-43d6-9899-4d17137a1fc0', // Cybersecurity Engineer
+        'vacancy': 'Cybersecurity Engineer',
+        'desc': 'Ищем Cybersecurity Engineer для проведения аудитов безопасности и защиты данных. Задачи включают тесты на проникновение, разработку политик безопасности (ISO 27001, GDPR) и защиту приложений, включая Flutter. Вы будете работать с Nessus, Metasploit и Wireshark, участвовать в проектах с миллионами пользователей. Мы предлагаем бонусы за успешные аудиты и гибкий график.',
+        'salaryFrom': 170000,
+        'salaryTo': 200000,
+      },
+      {
+        'name': 'CloudLine',
+        'email': 'team@cloudline.ru',
+        'specializationId': '60384426-b477-4a82-a182-055a344e101f', // DevOps Engineer
+        'vacancy': 'DevOps Engineer',
+        'desc': 'Требуется DevOps Engineer для настройки CI/CD и облачных решений (AWS, GCP). Вы будете работать с Docker, Kubernetes и Terraform, оптимизировать инфраструктуру для Flutter-приложений и внедрять мониторинг (Prometheus, Grafana). Проект включает высоконагруженные системы с миллионами пользователей. Мы предлагаем удаленную работу, участие в конференциях и карьерный рост.',
+        'salaryFrom': 165000,
+        'salaryTo': 195000,
+      },
+      {
+        'name': 'AI Systems',
+        'email': 'jobs@aisystems.ru',
+        'specializationId': '36358281-9e8b-400b-a5b7-6dc87c8d075b', // Data Scientist
+        'vacancy': 'Data Scientist',
+        'desc': 'Приглашаем Data Scientist для работы с большими данными и моделями машинного обучения. Вы будете разрабатывать модели прогнозирования (Python, TensorFlow), интегрировать их с мобильными приложениями и создавать дашборды (Tableau). Проект включает анализ данных в реальном времени и работу с объемами до 15 TB. Мы предлагаем гибкий график, обучение новым технологиям и бонусы.',
+        'salaryFrom': 190000,
+        'salaryTo': 220000,
+      },
+      {
+        'name': 'РосТехСеть',
+        'email': 'recruit@rt-net.ru',
+        'specializationId': '40c84fdb-c09e-497d-b3b0-ef868be408f4', // Systems Analyst
+        'vacancy': 'Systems Analyst',
+        'desc': 'Ищем Systems Analyst для описания бизнес-процессов и постановки задач разработчикам. Вы будете работать с проектами на Flutter и веб-сервисами, анализировать требования и взаимодействовать со стейкхолдерами. Мы используем BPMN, UML и Confluence для документации. Предлагаем комфортный офис, участие в международных проектах и бонусы за успешные релизы.',
+        'salaryFrom': 140000,
+        'salaryTo': 170000,
+      },
+      {
+        'name': 'CodeWorks',
+        'email': 'hr@codeworks.ru',
+        'specializationId': 'e34d82ec-89f2-4592-9e46-05f7b150a0c8', // Backend Developer
+        'vacancy': 'Backend Developer (Java)',
+        'desc': 'Требуется Backend Developer для разработки микросервисов с использованием Java (Spring Boot). Вы будете проектировать масштабируемые API, интегрировать их с Kafka и работать с PostgreSQL/MongoDB. Проект включает высоконагруженные системы с миллионами пользователей. Мы предлагаем удаленную работу, участие в хакатонах и карьерный рост до архитектора.',
+        'salaryFrom': 160000,
+        'salaryTo': 190000,
+      },
+      {
+        'name': 'SoftFox',
+        'email': 'vacancy@softfox.ru',
+        'specializationId': '115fb85f-8e22-459f-b80a-900f27bd9124', // Project Manager
+        'vacancy': 'Project Manager',
+        'desc': 'Приглашаем Project Manager для управления Agile-командами (до 20 человек). Вы будете координировать проекты на Flutter и веб-сервисы, контролировать сроки, бюджеты и коммуникацию со стейкхолдерами. Мы используем Jira, Confluence и MS Project, предоставляем обучение и участие в международных проектах. Гибкий график и бонусы за успешные запуски.',
+        'salaryFrom': 175000,
+        'salaryTo': 205000,
+      },
+    ];
+
+    // Создание работодателей
+    for (final e in employers) {
+      try {
+        // Логин под текущим пользователем
+        final loginResponse = await api.login(email: e['email'].toString(), password: 'Test123!', role: 'company_owner');
+        final accessToken = loginResponse['access_token'] as String;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', accessToken);
+        await prefs.setString('refresh_token', loginResponse['refresh_token'] as String);
+        print('Успешный логин для ${e['email']}');
+
+        // Получение профиля пользователя для получения companyId
+        final profile = await api.fetchProfile(accessToken);
+        final companyId = profile['companyId'] as String?;
+
+        // Сохранение companyId в SharedPreferences
+        if (companyId != null && companyId.isNotEmpty) {
+          await prefs.setString('companyId', companyId);
+          print('Сохранен companyId: $companyId для ${e['name']}');
+        } else {
+          print('Ошибка: companyId не получен для ${e['name']}. Проверьте API-ответ: $profile');
+          continue;
+        }
+
+        final userId = prefs.getString('user_id') ?? '';
+        if (userId.isEmpty) {
+          print('Ошибка: userId не найден для ${e['name']}. Проверьте инициализацию.');
+          continue;
+        }
+
+        final level = getRandomExperience();
+        final location = getRandomLocation();
+
+        // Вывод данных запроса для отладки
+        print('Создание вакансии для ${e['name']}: userId=$userId, companyId=$companyId, title=${e['vacancy']}, '
+            'salaryFrom=${e['salaryFrom']}, salaryTo=${e['salaryTo']}, specializationId=${e['specializationId']}, '
+            'experienceLevel=$level, location=$location');
+
+        await api.createVacancy(
+          userId: userId,
+          companyId: companyId,
+          title: e['vacancy'].toString(),
+          description: e['desc'].toString(),
+          salaryFrom: e['salaryFrom'] as num,
+          salaryTo: e['salaryTo'] as num,
+          specializationId: e['specializationId'].toString(),
+          experienceLevel: level,
+          location: location,
+        );
+        print('Вакансия успешно создана для ${e['name']} | Specialization ID: ${e['specializationId']} | $level | $location');
+      } catch (e) {
+        print('Ошибка при создании вакансии для');
+        if (e is DioException) {
+          print('Детали ошибки: ${e.response?.data}');
+        }
+      }
+    }
+  }*/
+
+
 }
 

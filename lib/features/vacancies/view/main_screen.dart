@@ -1,13 +1,12 @@
+import 'package:DevHub/features/vacancies/view/profile/profile_screen.dart';
+import 'package:DevHub/features/vacancies/view/responses/applicant/responses_screen.dart';
+import 'package:DevHub/features/vacancies/view/responses/company/company_responses_screen.dart';
+import 'package:DevHub/features/vacancies/view/resumes/resumes_screen.dart';
+import 'package:DevHub/features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:my_new_project/features/vacancies/view/profile/profile_screen.dart';
-import 'package:my_new_project/features/vacancies/view/responses/applicant/responses_screen.dart';
-import 'package:my_new_project/features/vacancies/view/responses/company/company_responses_screen.dart';
-import 'package:my_new_project/features/vacancies/view/resumes/resumes_screen.dart';
-import 'package:my_new_project/features/vacancies/view/vacancies/applicant/applicant_vacancies_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../repositories/main/api_service.dart';
-import '../../authorization/view/login_screen.dart';
 import 'chats/chats_screen.dart';
 import 'notifications/notifications_screen.dart';
 

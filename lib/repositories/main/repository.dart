@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_service.dart';
+import 'model/vacancy.dart';
 
 class Repository {
   final Dio _dio = Dio();

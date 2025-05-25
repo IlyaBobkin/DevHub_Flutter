@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
+
+import '../../../../../../repositories/main/api_service.dart';
 
 class CreateVacancyScreen extends StatefulWidget {
   const CreateVacancyScreen({super.key});

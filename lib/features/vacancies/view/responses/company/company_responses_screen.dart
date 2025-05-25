@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'package:DevHub/features/vacancies/view/responses/company/response_resume_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:my_new_project/features/vacancies/view/chats/chat_detail_screen.dart';
-import 'package:my_new_project/features/vacancies/view/responses/company/response_resume_screen.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../../repositories/main/api_service.dart';
 
 class CompanyResponsesScreen extends StatefulWidget {
   const CompanyResponsesScreen({super.key});
@@ -98,7 +98,6 @@ class _CompanyResponsesScreenState extends State<CompanyResponsesScreen> with Ro
         }
         return;
       }
-
       final response = await _apiService.createChat(
         applicantId: applicantId,
         companyOwnerId: companyOwnerId,
@@ -189,7 +188,9 @@ class _CompanyResponsesScreenState extends State<CompanyResponsesScreen> with Ro
             ),
           )
               : _responses.isEmpty
-              ? const Center(child: Text('Нет входящих откликов'))
+              ? RefreshIndicator(onRefresh: () async {              await _loadResponses();
+          },
+              child: const Center(child: Text('Нет входящих откликов')))
               : RefreshIndicator(
             onRefresh: () async {
               await _loadResponses();

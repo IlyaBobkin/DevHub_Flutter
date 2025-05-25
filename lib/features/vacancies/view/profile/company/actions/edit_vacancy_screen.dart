@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
+
+import '../../../../../../repositories/main/api_service.dart';
+import '../../../../../../repositories/main/model/vacancy.dart';
 
 class EditVacancyScreen extends StatefulWidget {
   final Vacancy vacancy;

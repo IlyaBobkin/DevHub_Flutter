@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/resume.dart';
+import '../../../../repositories/main/api_service.dart';
+import '../../../../repositories/main/model/resume.dart';
 import '../../../authorization/view/login_screen.dart';
 import 'resume_detail_screen.dart';
 

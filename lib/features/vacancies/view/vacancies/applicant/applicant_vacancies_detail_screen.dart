@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:my_new_project/repositories/main/api_service.dart';
-import 'package:my_new_project/repositories/main/model/vacancy.dart';
+
+import '../../../../../repositories/main/api_service.dart';
+import '../../../../../repositories/main/model/vacancy.dart';
 
 class ApplicantVacancyDetailScreen extends StatefulWidget {
   final String vacancyId;
@@ -183,7 +184,7 @@ class _ApplicantVacancyDetailScreenState extends State<ApplicantVacancyDetailScr
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_vacancy!.salaryFrom} - ${_vacancy!.salaryTo} ₽ в месяц',
+                  '${_vacancy!.salaryFrom?.replaceAll('.00', '')} - ${_vacancy!.salaryTo?.replaceAll('.00', '')} ₽ в месяц',
                   style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 8),

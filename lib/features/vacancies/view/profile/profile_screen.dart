@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../job_app.dart';
 import '../../../../repositories/main/api_service.dart';
 import '../../../authorization/view/login_screen.dart';
@@ -21,6 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _userName;
   String? _userEmail;
   String? _userRole;
+  String? _refGithub;
+  String? _refLeetcode;
   DateTime _userDate = DateTime.now();
   Map<String, dynamic>? _resume;
   List<Map<String, dynamic>> _specializations = [];
@@ -282,6 +287,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      if (_resume!['ref_github'] != null)
+                        Row(
+                          children: [
+                            Icon(AntDesign.github, color: Theme.of(context).colorScheme.primary, size: 24),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => launchUrlString(_resume!['ref_github']),
+                                child: Text(
+                                  _resume!['ref_github'] ?? 'Не указано',
+                                  style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 8),
+                      if (_resume!['ref_leetcode'] != null)
+                        Row(
+                          children: [
+                            Icon(FontAwesome.code, color: Theme.of(context).colorScheme.primary, size: 24),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => launchUrlString(_resume!['ref_leetcode']),
+                                child: Text(
+                                  _resume!['ref_leetcode'] ?? 'Не указано',
+                                  style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ],
                 ),

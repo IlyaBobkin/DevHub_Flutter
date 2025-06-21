@@ -76,12 +76,12 @@ Future<void> initializeApp() async {
     } catch (e) {
       print('Initialization failed: $e');
       await prefs.clear();
-      runApp(JobApp(initialRoute: '/login'));
+      runApp(JobApp(initialRoute: '/hello'));
       return;
     }
   } else {
     // Если токенов нет, переходим на экран логина
-    runApp(JobApp(initialRoute: '/login'));
+    runApp(JobApp(initialRoute: '/hello'));
     return;
   }
 
